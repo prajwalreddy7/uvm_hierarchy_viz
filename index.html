@@ -1,0 +1,179 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>UVM Hierarchy Viewer</title>
+<style>
+*{box-sizing:border-box}
+html,body{margin:0;width:100%;height:100%;overflow:hidden;font-family:Inter,system-ui,-apple-system,Segoe UI,Arial,sans-serif;background:#f6f7fb;color:#172033}
+#bar{height:60px;display:flex;align-items:center;gap:8px;padding:9px 12px;background:#fff;border-bottom:1px solid #e5e7eb;z-index:10;position:relative}
+button,input{height:40px;border:1px solid #d1d5db;background:#fff;border-radius:8px;font:inherit;color:#172033}
+button{padding:0 12px;cursor:pointer;font-weight:600}
+button:hover{background:#f3f4f6}
+#search{width:280px;padding:0 12px;outline:0}
+#search:focus{border-color:#6366f1;box-shadow:0 0 0 3px #eef2ff}
+#status{margin-left:auto;color:#667085;font-size:13px}
+#viewport{position:absolute;inset:60px 0 0;overflow:hidden;cursor:grab;
+background-color:#f8fafc;background-image:radial-gradient(#d8dee9 1px,transparent 1px);background-size:20px 20px}
+#viewport.dragging{cursor:grabbing}
+#canvas{position:absolute;left:0;top:0;transform-origin:0 0}
+svg{overflow:visible}
+.edge{fill:none;stroke:#b7bfcc;stroke-width:2}
+.node{cursor:pointer}
+.box{fill:#fff;stroke:#98a2b3;stroke-width:1.5}
+.node:hover .box{stroke:#6366f1;stroke-width:2}
+.node.selected .box{fill:#eef2ff;stroke:#4f46e5;stroke-width:2.5}
+.node.match .box{fill:#ecfdf3;stroke:#16a34a;stroke-width:3}
+.label{fill:#172033;font-size:14px;dominant-baseline:middle;pointer-events:none}
+.toggle{fill:#6366f1;stroke:#fff;stroke-width:2}
+.toggleText{fill:#fff;font-size:12px;font-weight:700;text-anchor:middle;dominant-baseline:central;pointer-events:none}
+#err{display:none;position:absolute;z-index:20;left:50%;top:50%;transform:translate(-50%,-50%);background:#fff;border:1px solid #fecaca;color:#991b1b;padding:18px 22px;border-radius:10px;box-shadow:0 10px 35px #0002;max-width:620px}
+@media(max-width:720px){#search{width:150px}.desktop{display:none}#status{display:none}}
+</style>
+</head>
+<body>
+<div id="bar">
+  <button onclick="zoomAtCenter(1.2)">+</button>
+  <button onclick="zoomAtCenter(1/1.2)">−</button>
+  <button onclick="fit()">Fit</button>
+  <button class="desktop" onclick="resetView()">Reset</button>
+  <input id="search" placeholder="Search component…" autocomplete="off">
+  <button class="desktop" onclick="expandAll()">Expand all</button>
+  <button class="desktop" onclick="collapseAll()">Collapse all</button>
+  <span id="status">Loading…</span>
+</div>
+<div id="viewport"><div id="canvas"><svg id="tree"></svg></div></div>
+<div id="err"></div>
+
+<script>
+const XML_FILE="UVM_Hierarchy.xml";
+const W=220,H=48,HG=90,VG=24;
+const MIN=.06,MAX=4;
+let root=null, all=[], zoom=1, ox=60, oy=60, dragging=false, sx=0, sy=0;
+
+function showError(e){const x=document.getElementById("err");x.textContent=e;x.style.display="block"}
+
+async function load(){
+ try{
+   let s=await (await fetch(XML_FILE)).text();
+   // Freeplane exports &nbsp;, which is not a predefined XML entity.
+   s=s.replace(/&nbsp;/g," ").replace(/&quot;/g,"\"");
+   const doc=new DOMParser().parseFromString(s,"application/xml");
+   if(doc.querySelector("parsererror")) throw Error("The XML could not be parsed.");
+   const el=doc.querySelector("node");
+   if(!el) throw Error("No hierarchy <node> was found.");
+   root=parse(el,null); all=[]; collect(root); render(); setTimeout(fit,80);
+ }catch(e){console.error(e);showError("Could not load UVM_Hierarchy.xml: "+e.message)}
+}
+
+function parse(el,parent){
+ const n={
+   id:el.getAttribute("ID")||("n_"+Math.random().toString(36).slice(2)),
+   text:el.getAttribute("TEXT")||"(unnamed)",
+   parent, children:[],
+   expanded:el.getAttribute("FOLDED")!=="true",
+   style:el.getAttribute("STYLE")||"",
+   bg:el.getAttribute("BACKGROUND_COLOR")||""
+ };
+ for(const c of el.children)
+   if(c.tagName.toLowerCase()==="node") n.children.push(parse(c,n));
+ return n;
+}
+function collect(n){all.push(n);n.children.forEach(collect)}
+function visible(){const a=[];(function walk(n){a.push(n);if(n.expanded)n.children.forEach(walk)})(root);return a}
+
+function layout(){
+ const pos=new Map();let y=0;
+ function place(n,d){
+   if(n.children.length&&n.expanded){
+     const ys=n.children.map(c=>place(c,d+1));
+     const py=(ys[0]+ys[ys.length-1])/2;
+     pos.set(n.id,{x:d*(W+HG),y:py});return py;
+   }
+   const py=y;y+=H+VG;pos.set(n.id,{x:d*(W+HG),y:py});return py;
+ }
+ place(root,0);return pos;
+}
+
+function render(){
+ const svg=document.getElementById("tree");svg.innerHTML="";
+ const vs=visible(),pos=layout();
+ for(const n of vs){
+   if(!n.parent)continue;
+   const a=pos.get(n.parent.id),b=pos.get(n.id);if(!a||!b)continue;
+   const p=document.createElementNS("http://www.w3.org/2000/svg","path");
+   const x1=a.x+W,x2=b.x,m=(x1+x2)/2,y1=a.y+H/2,y2=b.y+H/2;
+   p.setAttribute("d",`M ${x1} ${y1} C ${m} ${y1}, ${m} ${y2}, ${x2} ${y2}`);
+   p.classList.add("edge");svg.appendChild(p);
+ }
+ for(const n of vs){
+   const p=pos.get(n.id);if(!p)continue;
+   const g=document.createElementNS("http://www.w3.org/2000/svg","g");g.classList.add("node");g.dataset.id=n.id;
+   const r=document.createElementNS("http://www.w3.org/2000/svg","rect");r.setAttribute("x",p.x);r.setAttribute("y",p.y);r.setAttribute("width",W);r.setAttribute("height",H);r.setAttribute("rx",9);r.classList.add("box");g.appendChild(r);
+   const t=document.createElementNS("http://www.w3.org/2000/svg","text");t.setAttribute("x",p.x+14);t.setAttribute("y",p.y+H/2);t.classList.add("label");t.textContent=n.text.length>27?n.text.slice(0,24)+"…":n.text;g.appendChild(t);
+   if(n.children.length){
+     const c=document.createElementNS("http://www.w3.org/2000/svg","circle");c.setAttribute("cx",p.x+W-16);c.setAttribute("cy",p.y+H/2);c.setAttribute("r",9);c.classList.add("toggle");g.appendChild(c);
+     const q=document.createElementNS("http://www.w3.org/2000/svg","text");q.setAttribute("x",p.x+W-16);q.setAttribute("y",p.y+H/2);q.classList.add("toggleText");q.textContent=n.expanded?"−":"+";g.appendChild(q);
+   }
+   g.addEventListener("click",e=>{e.stopPropagation();if(n.children.length){n.expanded=!n.expanded;render()}else select(n)});
+   g.addEventListener("dblclick",e=>{e.stopPropagation();center(n)});
+   svg.appendChild(g);
+ }
+ const vals=[...pos.values()];
+ const maxX=Math.max(100,...vals.map(p=>p.x+W))+80,maxY=Math.max(100,...vals.map(p=>p.y+H))+80;
+ svg.setAttribute("width",maxX);svg.setAttribute("height",maxY);svg.setAttribute("viewBox",`0 0 ${maxX} ${maxY}`);
+ document.getElementById("status").textContent=`${all.length} nodes`;
+ apply();
+}
+
+function select(n){
+ document.querySelectorAll(".node").forEach(x=>x.classList.remove("selected"));
+ const e=document.querySelector(`[data-id="${CSS.escape(n.id)}"]`);if(e)e.classList.add("selected");
+ document.getElementById("status").textContent=n.text;
+}
+function expandAll(){all.forEach(n=>n.expanded=true);render();setTimeout(fit,50)}
+function collapseAll(){all.forEach(n=>n.expanded=false);root.expanded=true;render();setTimeout(fit,50)}
+
+document.getElementById("search").addEventListener("input",()=>{
+ const q=document.getElementById("search").value.trim().toLowerCase();
+ document.querySelectorAll(".node").forEach(x=>x.classList.remove("match"));
+ if(!q){document.getElementById("status").textContent=`${all.length} nodes`;return}
+ const hits=all.filter(n=>n.text.toLowerCase().includes(q));
+ hits.forEach(n=>{let p=n.parent;while(p){p.expanded=true;p=p.parent}});
+ render();
+ hits.forEach(n=>{const e=document.querySelector(`[data-id="${CSS.escape(n.id)}"]`);if(e)e.classList.add("match")});
+ document.getElementById("status").textContent=`${hits.length} match${hits.length===1?"":"es"}`;
+});
+
+function apply(){document.getElementById("canvas").style.transform=`translate(${ox}px,${oy}px) scale(${zoom})`}
+function zoomAtCenter(f){zoom=Math.max(MIN,Math.min(MAX,zoom*f));apply()}
+function resetView(){zoom=1;ox=60;oy=60;apply()}
+
+function fit(){
+ const svg=document.getElementById("tree"),vw=viewport.clientWidth,vh=viewport.clientHeight;
+ const w=parseFloat(svg.getAttribute("width"))||1,h=parseFloat(svg.getAttribute("height"))||1;
+ zoom=Math.max(MIN,Math.min(1,Math.min((vw-80)/w,(vh-80)/h)));
+ ox=(vw-w*zoom)/2;oy=(vh-h*zoom)/2;apply();
+}
+function center(n){
+ const e=document.querySelector(`[data-id="${CSS.escape(n.id)}"]`);if(!e)return;
+ const r=e.getBoundingClientRect(),v=viewport.getBoundingClientRect();
+ ox+=v.left+v.width/2-(r.left+r.width/2);
+ oy+=v.top+v.height/2-(r.top+r.height/2);apply();select(n);
+}
+
+const viewport=document.getElementById("viewport");
+viewport.addEventListener("wheel",e=>{e.preventDefault();zoomAtCenter(e.deltaY<0?1.15:1/1.15)},{passive:false});
+viewport.addEventListener("pointerdown",e=>{
+ if(e.target.closest(".node"))return;
+ dragging=true;viewport.classList.add("dragging");
+ sx=e.clientX-ox;sy=e.clientY-oy;viewport.setPointerCapture(e.pointerId);
+});
+viewport.addEventListener("pointermove",e=>{if(!dragging)return;ox=e.clientX-sx;oy=e.clientY-sy;apply()});
+viewport.addEventListener("pointerup",e=>{dragging=false;viewport.classList.remove("dragging");try{viewport.releasePointerCapture(e.pointerId)}catch{}});
+window.addEventListener("resize",()=>{});
+load();
+</script>
+</body>
+</html>
