@@ -17,23 +17,33 @@ body {
   width: 100%;
   height: 100%;
   overflow: hidden;
-  font-family: Inter, system-ui, -apple-system, "Segoe UI", Arial, sans-serif;
-  background: #f6f7fb;
-  color: #172033;
+
+  font-family: Inter, system-ui, -apple-system,
+               "Segoe UI", Arial, sans-serif;
+
+  /* BLACK BACKGROUND */
+  background: #000000;
+
+  color: #ffffff;
 }
 
-/* =========================
+
+/* ============================================================
    TOOLBAR
-   ========================= */
+   ============================================================ */
 
 #bar {
   height: 60px;
+
   display: flex;
   align-items: center;
   gap: 8px;
+
   padding: 9px 12px;
-  background: #fff;
-  border-bottom: 1px solid #e5e7eb;
+
+  background: #111111;
+  border-bottom: 1px solid #333333;
+
   z-index: 10;
   position: relative;
 }
@@ -41,11 +51,14 @@ body {
 button,
 input {
   height: 40px;
-  border: 1px solid #d1d5db;
-  background: #fff;
+
+  border: 1px solid #444444;
+  background: #1c1c1c;
+
   border-radius: 8px;
+
   font: inherit;
-  color: #172033;
+  color: #ffffff;
 }
 
 button {
@@ -55,7 +68,7 @@ button {
 }
 
 button:hover {
-  background: #f3f4f6;
+  background: #2a2a2a;
 }
 
 #search {
@@ -66,18 +79,20 @@ button:hover {
 
 #search:focus {
   border-color: #6366f1;
-  box-shadow: 0 0 0 3px #eef2ff;
+  box-shadow: 0 0 0 3px #312e81;
 }
 
 #status {
   margin-left: auto;
-  color: #667085;
+
+  color: #aaaaaa;
   font-size: 13px;
 }
 
-/* =========================
+
+/* ============================================================
    VIEWPORT
-   ========================= */
+   ============================================================ */
 
 #viewport {
   position: absolute;
@@ -85,9 +100,16 @@ button:hover {
   overflow: hidden;
   cursor: grab;
 
-  background-color: #f8fafc;
+  /* BLACK BACKGROUND */
+  background-color: #000000;
+
+  /* Subtle grid */
   background-image:
-    radial-gradient(#d8dee9 1px, transparent 1px);
+    radial-gradient(
+      #222222 1px,
+      transparent 1px
+    );
+
   background-size: 20px 20px;
 }
 
@@ -97,8 +119,10 @@ button:hover {
 
 #canvas {
   position: absolute;
+
   left: 0;
   top: 0;
+
   transform-origin: 0 0;
 }
 
@@ -106,74 +130,87 @@ svg {
   overflow: visible;
 }
 
-/* =========================
+
+/* ============================================================
    CONNECTIONS
-   ========================= */
+   ============================================================ */
 
 .edge {
   fill: none;
-  stroke: #b7bfcc;
+
+  /*
+   * Light gray connectors are visible
+   * against the black background.
+   */
+  stroke: #777777;
+
   stroke-width: 2;
 }
 
-/* =========================
+
+/* ============================================================
    NODES
-   ========================= */
+   ============================================================ */
 
 .node {
   cursor: pointer;
 }
 
+/* White node box */
 .box {
-  fill: #fff;
-  stroke: #98a2b3;
+  fill: #ffffff;
+  stroke: #777777;
   stroke-width: 1.5;
 }
 
+/* Hover */
 .node:hover .box {
+  fill: #ffffff;
   stroke: #6366f1;
   stroke-width: 2;
 }
 
+/* Selected node */
 .node.selected .box {
-  fill: #eef2ff;
-  stroke: #4f46e5;
+  fill: #ffffff;
+  stroke: #6366f1;
   stroke-width: 2.5;
 }
 
+/* Search match */
 .node.match .box {
-  fill: #ecfdf3;
-  stroke: #16a34a;
+  fill: #ffffff;
+  stroke: #22c55e;
   stroke-width: 3;
 }
 
-/*
- * IMPORTANT:
- * No text truncation.
- * The JavaScript dynamically sizes the box
- * based on the complete node name.
- */
+
+/* ============================================================
+   UVM NODE NAME
+   ============================================================ */
+
 .label {
-  fill: #172033;
+  fill: #000000;       /* BLACK TEXT */
   font-size: 14px;
-  font-weight: 500;
+  font-weight: 700;    /* BOLD */
   dominant-baseline: middle;
   pointer-events: none;
   white-space: nowrap;
 }
 
-/* =========================
+
+/* ============================================================
    EXPAND / COLLAPSE BUTTON
-   ========================= */
+   ============================================================ */
 
 .toggle {
   fill: #6366f1;
-  stroke: #fff;
+  stroke: #ffffff;
   stroke-width: 2;
 }
 
 .toggleText {
-  fill: #fff;
+  fill: #ffffff;
   font-size: 12px;
   font-weight: 700;
   text-anchor: middle;
@@ -181,14 +218,15 @@ svg {
   pointer-events: none;
 }
 
-/* =========================
-   ERROR
-   ========================= */
+/* ============================================================
+   ERROR BOX
+   ============================================================ */
 
 #err {
   display: none;
 
   position: absolute;
+
   z-index: 20;
 
   left: 50%;
@@ -196,21 +234,26 @@ svg {
 
   transform: translate(-50%, -50%);
 
-  background: #fff;
-  border: 1px solid #fecaca;
-  color: #991b1b;
+  background: #151515;
+
+  border: 1px solid #ef4444;
+
+  color: #fca5a5;
 
   padding: 18px 22px;
+
   border-radius: 10px;
 
-  box-shadow: 0 10px 35px #0002;
+  box-shadow:
+    0 10px 35px rgba(0, 0, 0, 0.8);
 
   max-width: 620px;
 }
 
-/* =========================
+
+/* ============================================================
    MOBILE
-   ========================= */
+   ============================================================ */
 
 @media(max-width:720px) {
 
@@ -592,10 +635,11 @@ function measureTextWidth(text) {
     canvas.getContext("2d");
 
   /*
-   * Must match the SVG label font.
+   * Must match the CSS .label font:
+   * bold 14px
    */
   ctx.font =
-    '14px Inter, system-ui, -apple-system, "Segoe UI", Arial, sans-serif';
+    '700 14px Inter, system-ui, -apple-system, "Segoe UI", Arial, sans-serif';
 
   return Math.ceil(
     ctx.measureText(text).width
