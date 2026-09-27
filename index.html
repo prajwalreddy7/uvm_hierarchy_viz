@@ -1,30 +1,50 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
+
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<meta charset="UTF-8">
+
+<meta
+  name="viewport"
+  content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+>
 
 <title>UVM Hierarchy Viewer</title>
 
+
 <style>
+
+/* ============================================================
+   GLOBAL
+   ============================================================ */
+
 * {
   box-sizing: border-box;
 }
 
 html,
 body {
+
   margin: 0;
+
   width: 100%;
   height: 100%;
+
   overflow: hidden;
 
-  font-family: Inter, system-ui, -apple-system,
-               "Segoe UI", Arial, sans-serif;
+  font-family:
+    Inter,
+    system-ui,
+    -apple-system,
+    "Segoe UI",
+    Arial,
+    sans-serif;
 
-  /* BLACK BACKGROUND */
-  background: #000000;
+  background: #000;
 
-  color: #ffffff;
+  color: #fff;
+
 }
 
 
@@ -33,201 +53,134 @@ body {
    ============================================================ */
 
 #bar {
-  height: 60px;
+
+  position: relative;
+
+  z-index: 1000;
+
+  min-height: 60px;
 
   display: flex;
+
   align-items: center;
-  gap: 8px;
 
-  padding: 9px 12px;
+  gap: 7px;
 
-  background: #111111;
-  border-bottom: 1px solid #333333;
+  padding: 8px 10px;
 
-  z-index: 10;
-  position: relative;
+  background: #111;
+
+  border-bottom: 1px solid #333;
+
 }
 
-button,
-input {
+
+/* ============================================================
+   BUTTONS
+   ============================================================ */
+
+#bar button {
+
   height: 40px;
 
-  border: 1px solid #444444;
-  background: #1c1c1c;
+  padding: 0 12px;
+
+  border: 1px solid #444;
 
   border-radius: 8px;
 
-  font: inherit;
-  color: #ffffff;
-}
+  background: #1c1c1c;
 
-button {
-  padding: 0 12px;
-  cursor: pointer;
-  font-weight: 600;
-}
+  color: #fff;
 
-button:hover {
-  background: #2a2a2a;
-}
+  font-family: inherit;
 
-#search {
-  width: 280px;
-  padding: 0 12px;
-  outline: 0;
-}
-
-#search:focus {
-  border-color: #6366f1;
-  box-shadow: 0 0 0 3px #312e81;
-}
-
-#status {
-  margin-left: auto;
-
-  color: #aaaaaa;
   font-size: 13px;
+
+  font-weight: 600;
+
+  cursor: pointer;
+
+  white-space: nowrap;
+
+  flex-shrink: 0;
+
+  -webkit-tap-highlight-color: transparent;
+
 }
+
+
+#bar button:hover {
+
+  background: #2a2a2a;
+
+}
+
+
+#bar button:active {
+
+  background: #383838;
+
+}
+
 
 /* ============================================================
    SEARCH
    ============================================================ */
 
 #searchWrapper {
+
   position: relative;
-}
 
-#searchResults {
+  flex: 1;
 
-  display: none;
+  min-width: 150px;
 
-  position: absolute;
-
-  top: 44px;
-
-  left: 0;
-
-  width: 320px;
-
-  max-height: 300px;
-
-  overflow-y: auto;
-
-  background: #111111;
-
-  border: 1px solid #444444;
-
-  border-radius: 8px;
-
-  box-shadow:
-    0 10px 30px rgba(0,0,0,.7);
-
-  z-index: 1000;
-}
-
-
-.searchResult {
-
-  padding: 10px 12px;
-
-  color: #ffffff;
-
-  font-size: 13px;
-
-  font-weight: 600;
-
-  cursor: pointer;
-
-  border-bottom:
-    1px solid #2a2a2a;
-
-  white-space: nowrap;
-
-  overflow: hidden;
-
-  text-overflow: ellipsis;
-}
-
-
-.searchResult:hover {
-
-  background: #292929;
+  z-index: 2000;
 
 }
 
-
-@media(max-width:480px) {
-
-  #searchResults {
-
-    width: 250px;
-
-    max-height: 240px;
-
-  }
-
-}
-
-/* ============================================================
-   VIEWPORT
-   ============================================================ */
-
-#viewport {
-  position: absolute;
-  inset: 60px 0 0;
-
-  overflow: hidden;
-
-  cursor: grab;
-
-  /*
-   * Critical for mobile:
-   * allows JavaScript to handle touch gestures.
-   */
-  touch-action: none;
-
-  background-color: #000000;
-
-  background-image:
-    radial-gradient(
-      #222222 1px,
-      transparent 1px
-    );
-
-  background-size: 20px 20px;
-}
-
-#viewport.dragging {
-  cursor: grabbing;
-}
-
-
-/* ============================================================
-   SEARCH WRAPPER
-   ============================================================ */
-
-#searchWrapper {
-  position: relative;
-  z-index: 1000;
-}
 
 #search {
-  width: 280px;
+
+  width: 100%;
+
   height: 40px;
 
   padding: 0 12px;
 
-  background: #1c1c1c;
-  color: #ffffff;
+  border: 1px solid #444;
 
-  border: 1px solid #444444;
   border-radius: 8px;
 
   outline: none;
+
+  background: #1c1c1c;
+
+  color: #fff;
+
+  font-family: inherit;
+
+  font-size: 14px;
+
 }
 
+
+#search::placeholder {
+
+  color: #888;
+
+}
+
+
 #search:focus {
+
   border-color: #6366f1;
+
+  box-shadow:
+    0 0 0 2px
+    rgba(99,102,241,.2);
+
 }
 
 
@@ -236,42 +189,54 @@ button:hover {
    ============================================================ */
 
 #searchResults {
+
   display: none;
 
   position: absolute;
 
-  top: 44px;
+  top: calc(100% + 5px);
+
   left: 0;
 
-  width: 320px;
+  width: 100%;
 
   max-height: 300px;
 
   overflow-y: auto;
 
-  background: #111111;
+  background: #111;
 
-  border: 1px solid #444444;
+  border: 1px solid #444;
 
   border-radius: 8px;
 
   box-shadow:
-    0 10px 30px rgba(0,0,0,.8);
+    0 12px 35px
+    rgba(0,0,0,.8);
 
-  z-index: 2000;
+  z-index: 9999;
 
-  /*
-   * Allow scrolling the search results
-   * on mobile.
-   */
   touch-action: pan-y;
+
+  -webkit-overflow-scrolling: touch;
+
 }
 
 
 .searchResult {
-  padding: 11px 13px;
 
-  color: #ffffff;
+  min-height: 44px;
+
+  display: flex;
+
+  align-items: center;
+
+  padding: 9px 12px;
+
+  border-bottom:
+    1px solid #292929;
+
+  color: #fff;
 
   font-size: 13px;
 
@@ -279,124 +244,137 @@ button:hover {
 
   cursor: pointer;
 
-  border-bottom:
-    1px solid #2a2a2a;
-
   white-space: nowrap;
 
   overflow: hidden;
 
   text-overflow: ellipsis;
 
-  /*
-   * Makes tapping easier on phones.
-   */
-  min-height: 42px;
+  -webkit-tap-highlight-color:
+    transparent;
 
-  display: flex;
-  align-items: center;
+}
+
+
+.searchResult:last-child {
+
+  border-bottom: none;
+
 }
 
 
 .searchResult:hover {
+
   background: #292929;
+
 }
+
 
 .searchResult:active {
-  background: #3b3b3b;
+
+  background: #3a3a3a;
+
 }
 
 
 /* ============================================================
-   MOBILE TOOLBAR
+   STATUS
    ============================================================ */
 
-@media (max-width: 768px) {
+#status {
 
-  #bar {
-    height: 56px;
+  color: #999;
 
-    padding: 7px;
+  font-size: 12px;
 
-    gap: 5px;
+  white-space: nowrap;
 
-    overflow: visible;
+  margin-left: auto;
 
-    white-space: nowrap;
-  }
+  flex-shrink: 0;
 
-  #searchWrapper {
-    flex: 1;
+}
 
-    min-width: 0;
-  }
 
-  #search {
-    width: 100%;
+/* ============================================================
+   VIEWPORT
+   ============================================================ */
 
-    min-width: 0;
+#viewport {
 
-    height: 38px;
+  position: absolute;
 
-    font-size: 14px;
-  }
+  top: 60px;
 
-  #searchResults {
-    width: min(
-      320px,
-      calc(100vw - 20px)
+  right: 0;
+
+  bottom: 0;
+
+  left: 0;
+
+  overflow: hidden;
+
+  background: #000;
+
+  background-image:
+    radial-gradient(
+      #222 1px,
+      transparent 1px
     );
 
-    max-height: 50vh;
+  background-size: 20px 20px;
 
-    /*
-     * Keep results inside the phone screen.
-     */
-    max-width: calc(100vw - 20px);
-  }
+  /*
+   * JavaScript handles
+   * all touch gestures.
+   */
 
-  #viewport {
-    inset: 56px 0 0;
+  touch-action: none;
 
-    touch-action: none;
-  }
+  overscroll-behavior: none;
+
+  cursor: grab;
+
+  user-select: none;
+
+  -webkit-user-select: none;
+
+  -webkit-touch-callout: none;
+
+}
+
+
+#viewport.dragging {
+
+  cursor: grabbing;
 
 }
 
 
 /* ============================================================
-   SMALL PHONES
+   CANVAS
    ============================================================ */
 
-@media (max-width: 480px) {
+#canvas {
 
-  #bar {
-    height: 52px;
+  position: absolute;
 
-    padding: 6px;
-  }
+  left: 0;
 
-  #search {
-    height: 36px;
+  top: 0;
 
-    font-size: 13px;
-  }
+  transform-origin: 0 0;
 
-  #searchResults {
-    top: 41px;
+  will-change: transform;
 
-    width: calc(100vw - 20px);
+  backface-visibility: hidden;
 
-    max-height: 55vh;
-  }
+}
 
-  #viewport {
-    inset: 52px 0 0;
-  }
 
-  .desktop {
-    display: none !important;
-  }
+svg {
+
+  overflow: visible;
 
 }
 
@@ -406,15 +384,18 @@ button:hover {
    ============================================================ */
 
 .edge {
+
   fill: none;
 
-  /*
-   * Light gray connectors are visible
-   * against the black background.
-   */
-  stroke: #777777;
+  stroke: #777;
 
   stroke-width: 2;
+
+  vector-effect:
+    non-scaling-stroke;
+
+  pointer-events: none;
+
 }
 
 
@@ -423,181 +404,513 @@ button:hover {
    ============================================================ */
 
 .node {
+
   cursor: pointer;
+
+  -webkit-tap-highlight-color:
+    transparent;
+
 }
 
-/* White node box */
+
 .box {
-  fill: #ffffff;
-  stroke: #777777;
+
+  fill: #fff;
+
+  stroke: #777;
+
   stroke-width: 1.5;
+
 }
 
-/* Hover */
+
 .node:hover .box {
-  fill: #ffffff;
+
+  fill: #fff;
+
   stroke: #6366f1;
+
   stroke-width: 2;
+
 }
 
-/* Selected node */
+
 .node.selected .box {
-  fill: #ffffff;
+
+  fill: #fff;
+
   stroke: #6366f1;
-  stroke-width: 2.5;
+
+  stroke-width: 3;
+
 }
 
-/* Search match */
+
 .node.match .box {
-  fill: #ffffff;
+
+  fill: #fff;
+
   stroke: #22c55e;
+
   stroke-width: 3;
+
 }
 
 
 /* ============================================================
-   UVM NODE NAME
+   NODE NAME
    ============================================================ */
 
 .label {
-  fill: #000000;       /* BLACK TEXT */
+
+  fill: #000;
+
   font-size: 14px;
-  font-weight: 700;    /* BOLD */
+
+  font-weight: 700;
+
   dominant-baseline: middle;
+
   pointer-events: none;
+
   white-space: nowrap;
+
 }
 
 
 /* ============================================================
-   EXPAND / COLLAPSE BUTTON
+   EXPAND / COLLAPSE
    ============================================================ */
 
 .toggle {
+
   fill: #6366f1;
-  stroke: #ffffff;
+
+  stroke: #fff;
+
   stroke-width: 2;
+
 }
+
 
 .toggleText {
-  fill: #ffffff;
+
+  fill: #fff;
+
   font-size: 12px;
+
   font-weight: 700;
+
   text-anchor: middle;
+
   dominant-baseline: central;
+
   pointer-events: none;
+
 }
 
+
 /* ============================================================
-   ERROR BOX
+   ERROR
    ============================================================ */
 
 #err {
+
   display: none;
 
   position: absolute;
 
-  z-index: 20;
+  z-index: 10000;
 
   left: 50%;
+
   top: 50%;
 
-  transform: translate(-50%, -50%);
+  transform:
+    translate(-50%, -50%);
+
+  width:
+    min(600px, calc(100vw - 30px));
+
+  padding: 18px;
 
   background: #151515;
 
   border: 1px solid #ef4444;
 
-  color: #fca5a5;
-
-  padding: 18px 22px;
-
   border-radius: 10px;
 
-  box-shadow:
-    0 10px 35px rgba(0, 0, 0, 0.8);
+  color: #fca5a5;
 
-  max-width: 620px;
+  box-shadow:
+    0 15px 40px
+    rgba(0,0,0,.8);
+
 }
 
 
 /* ============================================================
-   MOBILE
+   TABLET
    ============================================================ */
 
-@media(max-width:720px) {
+@media (max-width: 768px) {
+
+  #bar {
+
+    min-height: 104px;
+
+    height: auto;
+
+    display: grid;
+
+    grid-template-columns:
+      auto
+      auto
+      1fr
+      auto
+      auto;
+
+    grid-template-rows:
+      40px
+      40px;
+
+    gap: 6px;
+
+    padding: 7px;
+
+    overflow: visible;
+
+  }
+
+
+  #searchWrapper {
+
+    grid-column: 3;
+
+    grid-row: 1;
+
+    min-width: 0;
+
+  }
+
 
   #search {
-    width: 150px;
+
+    height: 40px;
+
+    font-size: 13px;
+
   }
 
-  .desktop {
-    display: none;
+
+  #bar button {
+
+    height: 40px;
+
+    padding: 0 9px;
+
+    font-size: 12px;
+
   }
+
+
+  #searchResults {
+
+    width:
+      min(360px,
+      calc(100vw - 14px));
+
+    max-height: 50vh;
+
+  }
+
 
   #status {
+
     display: none;
+
   }
+
+
+  #viewport {
+
+    top: 104px;
+
+  }
+
 }
+
+
+/* ============================================================
+   MOBILE PHONE
+   ============================================================ */
+
+@media (max-width: 480px) {
+
+  #bar {
+
+    min-height: 112px;
+
+    grid-template-columns:
+      38px
+      38px
+      1fr
+      52px
+      52px;
+
+    grid-template-rows:
+      38px
+      38px;
+
+    gap: 5px;
+
+    padding: 6px;
+
+  }
+
+
+  #zoomIn {
+
+    grid-column: 1;
+
+    grid-row: 1;
+
+  }
+
+
+  #zoomOut {
+
+    grid-column: 2;
+
+    grid-row: 1;
+
+  }
+
+
+  #searchWrapper {
+
+    grid-column: 3;
+
+    grid-row: 1;
+
+  }
+
+
+  #fitButton {
+
+    grid-column: 4;
+
+    grid-row: 1;
+
+  }
+
+
+  #resetButton {
+
+    grid-column: 5;
+
+    grid-row: 1;
+
+  }
+
+
+  #expandButton {
+
+    grid-column: 3;
+
+    grid-row: 2;
+
+  }
+
+
+  #collapseButton {
+
+    grid-column: 4 / 6;
+
+    grid-row: 2;
+
+  }
+
+
+  #bar button {
+
+    height: 38px;
+
+    padding: 0 6px;
+
+    font-size: 11px;
+
+  }
+
+
+  #search {
+
+    height: 38px;
+
+    padding: 0 8px;
+
+    font-size: 12px;
+
+  }
+
+
+  #searchResults {
+
+    top: 43px;
+
+    left: 50%;
+
+    transform:
+      translateX(-50%);
+
+    width:
+      calc(100vw - 12px);
+
+    max-width:
+      calc(100vw - 12px);
+
+    max-height: 55vh;
+
+  }
+
+
+  #viewport {
+
+    top: 112px;
+
+  }
+
+}
+
+
+/* ============================================================
+   VERY SMALL PHONES
+   ============================================================ */
+
+@media (max-width: 360px) {
+
+  #bar {
+
+    grid-template-columns:
+      34px
+      34px
+      1fr
+      46px
+      46px;
+
+    gap: 4px;
+
+    padding: 5px;
+
+  }
+
+
+  #bar button {
+
+    font-size: 10px;
+
+    padding: 0 4px;
+
+  }
+
+
+  #search {
+
+    font-size: 11px;
+
+    padding: 0 6px;
+
+  }
+
+}
+
 </style>
+
 </head>
+
 
 <body>
 
-<!-- =========================
+
+<!-- ==========================================================
      TOOLBAR
-     ========================= -->
+     ========================================================== -->
 
 <div id="bar">
 
-  <button onclick="zoomAtCenter(1.2)">
+
+  <button
+    id="zoomIn"
+    onclick="zoomAtCenter(1.2)"
+  >
     +
   </button>
 
-  <button onclick="zoomAtCenter(1/1.2)">
+
+  <button
+    id="zoomOut"
+    onclick="zoomAtCenter(1 / 1.2)"
+  >
     −
   </button>
 
-  <button onclick="fit()">
-    Fit
-  </button>
-
-  <button onclick="resetView()">
-    Reset
-  </button>
 
   <div id="searchWrapper">
 
-  <input
-    id="search"
-    placeholder="Search UVM class…"
-    autocomplete="off"
+    <input
+      id="search"
+      type="search"
+      placeholder="Search UVM..."
+      autocomplete="off"
+    >
+
+    <div id="searchResults"></div>
+
+  </div>
+
+
+  <button
+    id="fitButton"
+    onclick="fit()"
   >
-
-  <div id="searchResults"></div>
-
-</div>
-
-  <button
-    onclick="expandAll()">
-    Expand all
+    Fit
   </button>
 
+
   <button
-    onclick="collapseAll()">
-    Collapse all
+    id="resetButton"
+    onclick="resetView()"
+  >
+    Reset
   </button>
+
+
+  <button
+    id="expandButton"
+    onclick="expandAll()"
+  >
+    Expand All
+  </button>
+
+
+  <button
+    id="collapseButton"
+    onclick="collapseAll()"
+  >
+    Collapse All
+  </button>
+
 
   <span id="status">
-    Loading…
+    Loading...
   </span>
 
 </div>
 
 
-<!-- =========================
+<!-- ==========================================================
      VIEWPORT
-     ========================= -->
+     ========================================================== -->
 
 <div id="viewport">
 
@@ -610,118 +923,222 @@ button:hover {
 </div>
 
 
+<!-- ==========================================================
+     ERROR
+     ========================================================== -->
+
 <div id="err"></div>
 
 
 <script>
-    /* ============================================================
-   UVM HIERARCHY VIEWER
-   FINAL JAVASCRIPT
+
+/* ============================================================
+   CONFIGURATION
    ============================================================ */
 
-const XML_FILE = "UVM_Hierarchy.xml";
+const XML_FILE =
+  "UVM_Hierarchy.xml";
+
 
 const MIN_W = 220;
+
 const H = 48;
+
 const HG = 90;
+
 const VG = 24;
 
-const MIN = 0.06;
-const MAX = 4;
+
+const MIN_ZOOM = 0.06;
+
+const MAX_ZOOM = 4;
 
 
 /* ============================================================
-   GLOBAL STATE
+   STATE
    ============================================================ */
 
 let root = null;
+
 let all = [];
-
-let zoom = 1;
-
-let ox = 60;
-let oy = 60;
-
-let dragging = false;
 
 let columnWidths = [];
 
 
+let zoom = 1;
+
+let ox = 60;
+
+let oy = 60;
+
+
 /* ============================================================
-   MOBILE / POINTER STATE
+   POINTER STATE
    ============================================================ */
 
-let activePointers = new Map();
+const pointers =
+  new Map();
 
-let lastPointerPosition = null;
+
+let lastPanPoint = null;
 
 let lastPinchDistance = null;
 
 let lastPinchCenter = null;
 
+let isDragging = false;
+
 
 /* ============================================================
-   DOM REFERENCES
+   ANIMATION
+   ============================================================ */
+
+let transformFrame = null;
+
+
+/* ============================================================
+   DOM
    ============================================================ */
 
 const viewport =
-  document.getElementById("viewport");
+  document.getElementById(
+    "viewport"
+  );
+
 
 const canvas =
-  document.getElementById("canvas");
+  document.getElementById(
+    "canvas"
+  );
+
 
 const svg =
-  document.getElementById("tree");
+  document.getElementById(
+    "tree"
+  );
+
 
 const searchInput =
-  document.getElementById("search");
+  document.getElementById(
+    "search"
+  );
+
 
 const searchResults =
-  document.getElementById("searchResults");
+  document.getElementById(
+    "searchResults"
+  );
+
 
 const status =
-  document.getElementById("status");
+  document.getElementById(
+    "status"
+  );
+
 
 const errorBox =
-  document.getElementById("err");
+  document.getElementById(
+    "err"
+  );
 
 
 /* ============================================================
-   ERROR DISPLAY
+   APPLY TRANSFORM
+   ============================================================ */
+
+function apply() {
+
+  if (transformFrame) {
+
+    return;
+
+  }
+
+
+  transformFrame =
+    requestAnimationFrame(
+      () => {
+
+        canvas.style.transform =
+          `translate3d(
+            ${ox}px,
+            ${oy}px,
+            0
+          )
+          scale(${zoom})`;
+
+
+        transformFrame = null;
+
+      }
+    );
+
+}
+
+
+/* ============================================================
+   ERROR
    ============================================================ */
 
 function showError(message) {
 
   if (!errorBox) {
+
     alert(message);
+
     return;
+
   }
+
 
   errorBox.innerHTML = "";
 
-  const messageElement =
-    document.createElement("div");
 
-  messageElement.textContent =
+  const msg =
+    document.createElement(
+      "div"
+    );
+
+
+  msg.textContent =
     message;
 
+
   errorBox.appendChild(
-    messageElement
+    msg
   );
 
-  const hint =
-    document.createElement("div");
 
-  hint.style.marginTop = "8px";
-  hint.style.fontSize = "12px";
-  hint.style.color = "#999999";
+  const hint =
+    document.createElement(
+      "div"
+    );
+
+
+  hint.style.marginTop =
+    "8px";
+
+
+  hint.style.fontSize =
+    "12px";
+
+
+  hint.style.color =
+    "#999";
+
 
   hint.textContent =
     "Make sure UVM_Hierarchy.xml is in the same folder as this HTML file.";
 
-  errorBox.appendChild(hint);
 
-  errorBox.style.display = "block";
+  errorBox.appendChild(
+    hint
+  );
+
+
+  errorBox.style.display =
+    "block";
+
 }
 
 
@@ -734,7 +1151,10 @@ async function load() {
   try {
 
     const response =
-      await fetch(XML_FILE);
+      await fetch(
+        XML_FILE
+      );
+
 
     if (!response.ok) {
 
@@ -744,13 +1164,13 @@ async function load() {
 
     }
 
+
     let xmlText =
       await response.text();
 
 
     /*
-     * Freeplane may contain &nbsp;.
-     * DOMParser XML mode does not recognize it.
+     * Freeplane can contain &nbsp;.
      */
     xmlText =
       xmlText.replace(
@@ -779,23 +1199,22 @@ async function load() {
     if (parserError) {
 
       throw new Error(
-        "The XML could not be parsed."
+        "Invalid XML"
       );
 
     }
 
 
-    /*
-     * First <node> is the hierarchy root.
-     */
     const rootElement =
-      doc.querySelector("node");
+      doc.querySelector(
+        "node"
+      );
 
 
     if (!rootElement) {
 
       throw new Error(
-        "No hierarchy node was found."
+        "No <node> hierarchy found"
       );
 
     }
@@ -810,16 +1229,13 @@ async function load() {
 
     all = [];
 
+
     collect(root);
 
 
     render();
 
 
-    /*
-     * Fit after browser has
-     * calculated the SVG size.
-     */
     setTimeout(
       fit,
       100
@@ -828,7 +1244,10 @@ async function load() {
   }
   catch (error) {
 
-    console.error(error);
+    console.error(
+      error
+    );
+
 
     showError(
       "Could not load UVM_Hierarchy.xml: " +
@@ -852,7 +1271,9 @@ function parseNode(
   const node = {
 
     id:
-      element.getAttribute("ID") ||
+      element.getAttribute(
+        "ID"
+      ) ||
       (
         "node_" +
         Math.random()
@@ -860,41 +1281,44 @@ function parseNode(
           .slice(2)
       ),
 
+
     text:
-      element.getAttribute("TEXT") ||
+      element.getAttribute(
+        "TEXT"
+      ) ||
       "(unnamed)",
 
-    parent: parent,
+
+    parent:
+      parent,
+
 
     children: [],
 
+
     expanded:
-      element.getAttribute("FOLDED") !== "true",
+      element.getAttribute(
+        "FOLDED"
+      ) !== "true",
 
-    width: MIN_W,
 
-    height: H
+    width:
+      MIN_W,
+
+
+    height:
+      H
 
   };
 
 
   /*
    * Only nested <node> elements
-   * are part of the hierarchy.
-   *
-   * Freeplane metadata such as:
-   *
-   * hook
-   * attribute
-   * richcontent
-   * map_styles
-   * stylenode
-   *
-   * is ignored.
+   * form the hierarchy.
    */
-
   for (
-    const child of element.children
+    const child of
+    element.children
   ) {
 
     if (
@@ -920,22 +1344,24 @@ function parseNode(
 
 
 /* ============================================================
-   COLLECT ALL NODES
+   COLLECT
    ============================================================ */
 
 function collect(node) {
 
   all.push(node);
 
+
   node.children.forEach(
-    child => collect(child)
+    child =>
+      collect(child)
   );
 
 }
 
 
 /* ============================================================
-   GET VISIBLE NODES
+   VISIBLE NODES
    ============================================================ */
 
 function visible() {
@@ -948,10 +1374,13 @@ function visible() {
     result.push(node);
 
 
-    if (node.expanded) {
+    if (
+      node.expanded
+    ) {
 
       node.children.forEach(
-        child => walk(child)
+        child =>
+          walk(child)
       );
 
     }
@@ -960,7 +1389,9 @@ function visible() {
 
 
   if (root) {
+
     walk(root);
+
   }
 
 
@@ -970,40 +1401,43 @@ function visible() {
 
 
 /* ============================================================
-   MEASURE NODE TEXT
+   MEASURE TEXT
    ============================================================ */
 
-function measureTextWidth(text) {
+function measureTextWidth(
+  text
+) {
 
-  const measureCanvas =
+  const c =
     document.createElement(
       "canvas"
     );
 
+
   const ctx =
-    measureCanvas.getContext(
+    c.getContext(
       "2d"
     );
 
 
   /*
-   * Must match .label CSS.
-   *
-   * 700 = bold.
+   * Bold font.
    */
   ctx.font =
     '700 14px Inter, system-ui, -apple-system, "Segoe UI", Arial, sans-serif';
 
 
   return Math.ceil(
-    ctx.measureText(text).width
+    ctx.measureText(
+      text
+    ).width
   );
 
 }
 
 
 /* ============================================================
-   CALCULATE NODE SIZES
+   NODE SIZES
    ============================================================ */
 
 function prepareNodeSizes() {
@@ -1011,76 +1445,73 @@ function prepareNodeSizes() {
   columnWidths = [];
 
 
-  all.forEach(node => {
+  all.forEach(
+    node => {
 
-    const textWidth =
-      measureTextWidth(
-        node.text
-      );
-
-
-    /*
-     * 28px:
-     * left + right padding
-     *
-     * 38px:
-     * expand/collapse button
-     */
-    const toggleSpace =
-      node.children.length
-        ? 38
-        : 0;
+      const textWidth =
+        measureTextWidth(
+          node.text
+        );
 
 
-    node.width =
-      Math.max(
-        MIN_W,
-        textWidth +
-        28 +
-        toggleSpace
-      );
+      const toggleSpace =
+        node.children.length
+          ? 38
+          : 0;
 
 
-    node.height = H;
+      node.width =
+        Math.max(
+          MIN_W,
 
-  });
-
-
-  /*
-   * Find maximum node width
-   * at every hierarchy depth.
-   */
-  all.forEach(node => {
-
-    let depth = 0;
-
-    let parent =
-      node.parent;
+          textWidth +
+          28 +
+          toggleSpace
+        );
 
 
-    while (parent) {
-
-      depth++;
-
-      parent =
-        parent.parent;
+      node.height =
+        H;
 
     }
+  );
 
 
-    columnWidths[depth] =
-      Math.max(
-        columnWidths[depth] || MIN_W,
-        node.width
-      );
+  all.forEach(
+    node => {
 
-  });
+      let depth = 0;
+
+      let parent =
+        node.parent;
+
+
+      while (parent) {
+
+        depth++;
+
+        parent =
+          parent.parent;
+
+      }
+
+
+      columnWidths[depth] =
+        Math.max(
+          columnWidths[depth] ||
+          MIN_W,
+
+          node.width
+        );
+
+    }
+  );
 
 }
 
 
 /* ============================================================
-   TREE LAYOUT
+   LAYOUT
    ============================================================ */
 
 function layout() {
@@ -1088,14 +1519,12 @@ function layout() {
   const positions =
     new Map();
 
+
   let y = 0;
 
 
-  /*
-   * X coordinate for every
-   * hierarchy depth.
-   */
   const xByDepth = [];
+
 
   let x = 0;
 
@@ -1106,7 +1535,9 @@ function layout() {
     depth++
   ) {
 
-    xByDepth[depth] = x;
+    xByDepth[depth] =
+      x;
+
 
     x +=
       columnWidths[depth] +
@@ -1120,9 +1551,6 @@ function layout() {
     depth
   ) {
 
-    /*
-     * Expanded parent.
-     */
     if (
       node.children.length &&
       node.expanded
@@ -1150,6 +1578,7 @@ function layout() {
       positions.set(
         node.id,
         {
+
           x:
             xByDepth[depth],
 
@@ -1161,6 +1590,7 @@ function layout() {
 
           height:
             H
+
         }
       );
 
@@ -1170,17 +1600,18 @@ function layout() {
     }
 
 
-    /*
-     * Leaf or collapsed node.
-     */
-    const nodeY = y;
+    const nodeY =
+      y;
 
-    y += H + VG;
+
+    y +=
+      H + VG;
 
 
     positions.set(
       node.id,
       {
+
         x:
           xByDepth[depth],
 
@@ -1192,6 +1623,7 @@ function layout() {
 
         height:
           H
+
       }
     );
 
@@ -1218,7 +1650,8 @@ function layout() {
 
 function render() {
 
-  svg.innerHTML = "";
+  svg.innerHTML =
+    "";
 
 
   prepareNodeSizes();
@@ -1233,357 +1666,370 @@ function render() {
 
 
   /* ==========================================================
-     DRAW CONNECTIONS
+     EDGES
      ========================================================== */
 
-  for (
-    const node of nodes
-  ) {
+  nodes.forEach(
+    node => {
 
-    if (!node.parent) {
-      continue;
-    }
+      if (!node.parent) {
 
+        return;
 
-    const parent =
-      positions.get(
-        node.parent.id
-      );
+      }
 
 
-    const child =
-      positions.get(
-        node.id
-      );
-
-
-    if (!parent || !child) {
-      continue;
-    }
-
-
-    const path =
-      document.createElementNS(
-        "http://www.w3.org/2000/svg",
-        "path"
-      );
-
-
-    const x1 =
-      parent.x +
-      parent.width;
-
-
-    const x2 =
-      child.x;
-
-
-    const middle =
-      (x1 + x2) / 2;
-
-
-    const y1 =
-      parent.y +
-      parent.height / 2;
-
-
-    const y2 =
-      child.y +
-      child.height / 2;
-
-
-    path.setAttribute(
-      "d",
-      `
-      M ${x1} ${y1}
-      C ${middle} ${y1},
-        ${middle} ${y2},
-        ${x2} ${y2}
-      `
-    );
-
-
-    path.classList.add(
-      "edge"
-    );
-
-
-    svg.appendChild(
-      path
-    );
-
-  }
-
-
-  /* ==========================================================
-     DRAW NODES
-     ========================================================== */
-
-  for (
-    const node of nodes
-  ) {
-
-    const position =
-      positions.get(
-        node.id
-      );
-
-
-    if (!position) {
-      continue;
-    }
-
-
-    const group =
-      document.createElementNS(
-        "http://www.w3.org/2000/svg",
-        "g"
-      );
-
-
-    group.classList.add(
-      "node"
-    );
-
-
-    group.dataset.id =
-      node.id;
-
-
-    /* ========================================================
-       BOX
-       ======================================================== */
-
-    const rect =
-      document.createElementNS(
-        "http://www.w3.org/2000/svg",
-        "rect"
-      );
-
-
-    rect.setAttribute(
-      "x",
-      position.x
-    );
-
-    rect.setAttribute(
-      "y",
-      position.y
-    );
-
-    rect.setAttribute(
-      "width",
-      position.width
-    );
-
-    rect.setAttribute(
-      "height",
-      position.height
-    );
-
-    rect.setAttribute(
-      "rx",
-      9
-    );
-
-
-    rect.classList.add(
-      "box"
-    );
-
-
-    group.appendChild(
-      rect
-    );
-
-
-    /* ========================================================
-       LABEL
-       ======================================================== */
-
-    const label =
-      document.createElementNS(
-        "http://www.w3.org/2000/svg",
-        "text"
-      );
-
-
-    label.setAttribute(
-      "x",
-      position.x + 14
-    );
-
-
-    label.setAttribute(
-      "y",
-      position.y +
-      position.height / 2
-    );
-
-
-    label.classList.add(
-      "label"
-    );
-
-
-    /*
-     * IMPORTANT:
-     *
-     * Full node name.
-     * No truncation.
-     */
-    label.textContent =
-      node.text;
-
-
-    group.appendChild(
-      label
-    );
-
-
-    /* ========================================================
-       EXPAND / COLLAPSE
-       ======================================================== */
-
-    if (
-      node.children.length
-    ) {
-
-      const circle =
-        document.createElementNS(
-          "http://www.w3.org/2000/svg",
-          "circle"
+      const parent =
+        positions.get(
+          node.parent.id
         );
 
 
-      circle.setAttribute(
-        "cx",
-        position.x +
-        position.width -
-        16
+      const child =
+        positions.get(
+          node.id
+        );
+
+
+      if (
+        !parent ||
+        !child
+      ) {
+
+        return;
+
+      }
+
+
+      const path =
+        document.createElementNS(
+          "http://www.w3.org/2000/svg",
+          "path"
+        );
+
+
+      const x1 =
+        parent.x +
+        parent.width;
+
+
+      const x2 =
+        child.x;
+
+
+      const middle =
+        (x1 + x2) / 2;
+
+
+      const y1 =
+        parent.y +
+        parent.height / 2;
+
+
+      const y2 =
+        child.y +
+        child.height / 2;
+
+
+      path.setAttribute(
+        "d",
+        `
+        M ${x1} ${y1}
+        C ${middle} ${y1},
+          ${middle} ${y2},
+          ${x2} ${y2}
+        `
       );
 
 
-      circle.setAttribute(
-        "cy",
-        position.y +
-        position.height / 2
+      path.classList.add(
+        "edge"
       );
 
 
-      circle.setAttribute(
-        "r",
+      svg.appendChild(
+        path
+      );
+
+    }
+  );
+
+
+  /* ==========================================================
+     NODES
+     ========================================================== */
+
+  nodes.forEach(
+    node => {
+
+      const p =
+        positions.get(
+          node.id
+        );
+
+
+      if (!p) {
+
+        return;
+
+      }
+
+
+      const group =
+        document.createElementNS(
+          "http://www.w3.org/2000/svg",
+          "g"
+        );
+
+
+      group.classList.add(
+        "node"
+      );
+
+
+      group.dataset.id =
+        node.id;
+
+
+      /* ------------------------------------------------------
+         BOX
+         ------------------------------------------------------ */
+
+      const rect =
+        document.createElementNS(
+          "http://www.w3.org/2000/svg",
+          "rect"
+        );
+
+
+      rect.setAttribute(
+        "x",
+        p.x
+      );
+
+
+      rect.setAttribute(
+        "y",
+        p.y
+      );
+
+
+      rect.setAttribute(
+        "width",
+        p.width
+      );
+
+
+      rect.setAttribute(
+        "height",
+        p.height
+      );
+
+
+      rect.setAttribute(
+        "rx",
         9
       );
 
 
-      circle.classList.add(
-        "toggle"
+      rect.classList.add(
+        "box"
       );
 
 
       group.appendChild(
-        circle
+        rect
       );
 
 
-      const toggleText =
+      /* ------------------------------------------------------
+         TEXT
+         ------------------------------------------------------ */
+
+      const label =
         document.createElementNS(
           "http://www.w3.org/2000/svg",
           "text"
         );
 
 
-      toggleText.setAttribute(
+      label.setAttribute(
         "x",
-        position.x +
-        position.width -
-        16
+        p.x + 14
       );
 
 
-      toggleText.setAttribute(
+      label.setAttribute(
         "y",
-        position.y +
-        position.height / 2
+        p.y +
+        p.height / 2
       );
 
 
-      toggleText.classList.add(
-        "toggleText"
+      label.classList.add(
+        "label"
       );
 
 
-      toggleText.textContent =
-        node.expanded
-          ? "−"
-          : "+";
+      /*
+       * Full name.
+       *
+       * No truncation.
+       */
+      label.textContent =
+        node.text;
 
 
       group.appendChild(
-        toggleText
+        label
       );
 
-    }
+
+      /* ------------------------------------------------------
+         EXPAND BUTTON
+         ------------------------------------------------------ */
+
+      if (
+        node.children.length
+      ) {
+
+        const circle =
+          document.createElementNS(
+            "http://www.w3.org/2000/svg",
+            "circle"
+          );
 
 
-    /* ========================================================
-       SINGLE CLICK
-       ======================================================== */
-
-    group.addEventListener(
-      "click",
-      event => {
-
-        event.stopPropagation();
+        circle.setAttribute(
+          "cx",
+          p.x +
+          p.width -
+          16
+        );
 
 
-        if (
-          node.children.length
-        ) {
+        circle.setAttribute(
+          "cy",
+          p.y +
+          p.height / 2
+        );
 
-          node.expanded =
-            !node.expanded;
+
+        circle.setAttribute(
+          "r",
+          9
+        );
 
 
-          render();
+        circle.classList.add(
+          "toggle"
+        );
+
+
+        group.appendChild(
+          circle
+        );
+
+
+        const toggleText =
+          document.createElementNS(
+            "http://www.w3.org/2000/svg",
+            "text"
+          );
+
+
+        toggleText.setAttribute(
+          "x",
+          p.x +
+          p.width -
+          16
+        );
+
+
+        toggleText.setAttribute(
+          "y",
+          p.y +
+          p.height / 2
+        );
+
+
+        toggleText.classList.add(
+          "toggleText"
+        );
+
+
+        toggleText.textContent =
+          node.expanded
+            ? "−"
+            : "+";
+
+
+        group.appendChild(
+          toggleText
+        );
+
+      }
+
+
+      /* ------------------------------------------------------
+         CLICK
+         ------------------------------------------------------ */
+
+      group.addEventListener(
+        "click",
+        event => {
+
+          event.stopPropagation();
+
+
+          if (
+            node.children.length
+          ) {
+
+            node.expanded =
+              !node.expanded;
+
+
+            render();
+
+          }
+          else {
+
+            selectNode(
+              node
+            );
+
+          }
 
         }
-        else {
+      );
 
-          selectNode(
+
+      /* ------------------------------------------------------
+         DOUBLE CLICK
+         ------------------------------------------------------ */
+
+      group.addEventListener(
+        "dblclick",
+        event => {
+
+          event.stopPropagation();
+
+
+          centerNode(
             node
           );
 
         }
-
-      }
-    );
+      );
 
 
-    /* ========================================================
-       DOUBLE CLICK
-       ======================================================== */
+      svg.appendChild(
+        group
+      );
 
-    group.addEventListener(
-      "dblclick",
-      event => {
-
-        event.stopPropagation();
-
-        centerNode(
-          node
-        );
-
-      }
-    );
-
-
-    svg.appendChild(
-      group
-    );
-
-  }
+    }
+  );
 
 
   /* ==========================================================
@@ -1597,9 +2043,11 @@ function render() {
   const maxX =
     Math.max(
       100,
+
       ...values.map(
         p =>
-          p.x + p.width
+          p.x +
+          p.width
       )
     ) + 80;
 
@@ -1607,9 +2055,11 @@ function render() {
   const maxY =
     Math.max(
       100,
+
       ...values.map(
         p =>
-          p.y + p.height
+          p.y +
+          p.height
       )
     ) + 80;
 
@@ -1652,14 +2102,18 @@ function render() {
 function selectNode(node) {
 
   document
-    .querySelectorAll(".node")
-    .forEach(element => {
+    .querySelectorAll(
+      ".node"
+    )
+    .forEach(
+      element => {
 
-      element.classList.remove(
-        "selected"
-      );
+        element.classList.remove(
+          "selected"
+        );
 
-    });
+      }
+    );
 
 
   const element =
@@ -1695,7 +2149,10 @@ function expandAll() {
 
   all.forEach(
     node => {
-      node.expanded = true;
+
+      node.expanded =
+        true;
+
     }
   );
 
@@ -1719,16 +2176,19 @@ function collapseAll() {
 
   all.forEach(
     node => {
-      node.expanded = false;
+
+      node.expanded =
+        false;
+
     }
   );
 
 
-  /*
-   * Keep root visible.
-   */
   if (root) {
-    root.expanded = true;
+
+    root.expanded =
+      true;
+
   }
 
 
@@ -1747,19 +2207,11 @@ function collapseAll() {
    SEARCH
    ============================================================ */
 
-if (searchInput) {
+searchInput.addEventListener(
+  "input",
+  handleSearch
+);
 
-  searchInput.addEventListener(
-    "input",
-    handleSearch
-  );
-
-}
-
-
-/* ============================================================
-   HANDLE SEARCH
-   ============================================================ */
 
 function handleSearch() {
 
@@ -1769,24 +2221,23 @@ function handleSearch() {
       .toLowerCase();
 
 
-  /*
-   * Clear results.
-   */
-  searchResults.innerHTML = "";
+  searchResults.innerHTML =
+    "";
 
 
-  /*
-   * Remove previous highlights.
-   */
   document
-    .querySelectorAll(".node")
-    .forEach(element => {
+    .querySelectorAll(
+      ".node"
+    )
+    .forEach(
+      element => {
 
-      element.classList.remove(
-        "match"
-      );
+        element.classList.remove(
+          "match"
+        );
 
-    });
+      }
+    );
 
 
   if (!query) {
@@ -1808,10 +2259,6 @@ function handleSearch() {
     );
 
 
-  /* ==========================================================
-     NO RESULTS
-     ========================================================== */
-
   if (!matches.length) {
 
     const empty =
@@ -1829,7 +2276,7 @@ function handleSearch() {
 
 
     empty.style.color =
-      "#999999";
+      "#888";
 
 
     searchResults.appendChild(
@@ -1845,10 +2292,6 @@ function handleSearch() {
 
   }
 
-
-  /* ==========================================================
-     SEARCH RESULTS
-     ========================================================== */
 
   matches.forEach(
     node => {
@@ -1868,34 +2311,17 @@ function handleSearch() {
 
 
       /*
-       * Tap/click search result.
+       * pointerdown works reliably
+       * on both desktop and mobile.
        */
       result.addEventListener(
-        "click",
+        "pointerdown",
         event => {
 
           event.preventDefault();
 
           event.stopPropagation();
 
-          goToNode(
-            node
-          );
-
-        }
-      );
-
-
-      /*
-       * Mobile touch.
-       */
-      result.addEventListener(
-        "pointerup",
-        event => {
-
-          event.preventDefault();
-
-          event.stopPropagation();
 
           goToNode(
             node
@@ -1920,13 +2346,13 @@ function handleSearch() {
 
 
 /* ============================================================
-   GO TO SEARCHED NODE
+   GO TO SEARCH RESULT
    ============================================================ */
 
 function goToNode(node) {
 
   /*
-   * Expand all ancestors.
+   * Expand all parents.
    */
   let parent =
     node.parent;
@@ -1937,6 +2363,7 @@ function goToNode(node) {
     parent.expanded =
       true;
 
+
     parent =
       parent.parent;
 
@@ -1944,28 +2371,19 @@ function goToNode(node) {
 
 
   /*
-   * Re-render so the node becomes visible.
+   * Re-render tree.
    */
   render();
 
 
-  /*
-   * Give SVG time to update.
-   */
-  setTimeout(
+  requestAnimationFrame(
     () => {
 
-      /*
-       * Center the selected node.
-       */
       centerNode(
         node
       );
 
 
-      /*
-       * Highlight it.
-       */
       const element =
         document.querySelector(
           `[data-id="${CSS.escape(node.id)}"]`
@@ -1981,135 +2399,21 @@ function goToNode(node) {
       }
 
 
-      /*
-       * Close results.
-       */
       searchResults.style.display =
         "none";
 
 
-      /*
-       * Keep selected node name
-       * in search box.
-       */
       searchInput.value =
         node.text;
 
-    },
-    50
+    }
   );
 
 }
 
 
 /* ============================================================
-   APPLY TRANSFORM
-   ============================================================ */
-
-function apply() {
-
-  canvas.style.transform =
-    `translate(${ox}px, ${oy}px) scale(${zoom})`;
-
-}
-
-
-/* ============================================================
-   NORMAL ZOOM
-   ============================================================ */
-
-function zoomAtCenter(
-  factor
-) {
-
-  const viewportWidth =
-    viewport.clientWidth;
-
-  const viewportHeight =
-    viewport.clientHeight;
-
-
-  zoom =
-    Math.max(
-      MIN,
-      Math.min(
-        MAX,
-        zoom * factor
-      )
-    );
-
-
-  /*
-   * Keep zoom centered around
-   * screen center.
-   */
-  const centerX =
-    viewportWidth / 2;
-
-  const centerY =
-    viewportHeight / 2;
-
-
-  apply();
-
-}
-
-
-/* ============================================================
-   ZOOM AROUND TOUCH POINT
-   ============================================================ */
-
-function zoomAroundPoint(
-  factor,
-  screenX,
-  screenY
-) {
-
-  const oldZoom =
-    zoom;
-
-
-  zoom =
-    Math.max(
-      MIN,
-      Math.min(
-        MAX,
-        zoom * factor
-      )
-    );
-
-
-  const zoomChange =
-    zoom / oldZoom;
-
-
-  /*
-   * Keep the content beneath
-   * the fingers stationary.
-   */
-  ox =
-    screenX -
-    (
-      screenX - ox
-    ) *
-    zoomChange;
-
-
-  oy =
-    screenY -
-    (
-      screenY - oy
-    ) *
-    zoomChange;
-
-
-  apply();
-
-}
-
-
-/* ============================================================
-   FIT TO SCREEN
+   FIT
    ============================================================ */
 
 function fit() {
@@ -2138,32 +2442,24 @@ function fit() {
     viewport.clientHeight;
 
 
-  /*
-   * Leave some margin.
-   */
-  const horizontalMargin =
-    40;
-
-  const verticalMargin =
-    40;
+  const margin =
+    window.innerWidth <= 480
+      ? 20
+      : 40;
 
 
   zoom =
     Math.max(
-      MIN,
+      MIN_ZOOM,
+
       Math.min(
         1,
-        Math.min(
-          (
-            viewportWidth -
-            horizontalMargin
-          ) / width,
 
-          (
-            viewportHeight -
-            verticalMargin
-          ) / height
-        )
+        (viewportWidth - margin) /
+          width,
+
+        (viewportHeight - margin) /
+          height
       )
     );
 
@@ -2188,7 +2484,7 @@ function fit() {
 
 
 /* ============================================================
-   RESET VIEW
+   RESET
    ============================================================ */
 
 function resetView() {
@@ -2198,6 +2494,104 @@ function resetView() {
   ox = 60;
 
   oy = 60;
+
+  apply();
+
+}
+
+
+/* ============================================================
+   ZOOM AT SCREEN CENTER
+   ============================================================ */
+
+function zoomAtCenter(
+  factor
+) {
+
+  const x =
+    viewport.clientWidth / 2;
+
+
+  const y =
+    viewport.clientHeight / 2;
+
+
+  zoomAroundPoint(
+    factor,
+    x,
+    y
+  );
+
+}
+
+
+/* ============================================================
+   ZOOM AROUND POINT
+   ============================================================ */
+
+function zoomAroundPoint(
+  factor,
+  screenX,
+  screenY
+) {
+
+  const oldZoom =
+    zoom;
+
+
+  const newZoom =
+    Math.max(
+      MIN_ZOOM,
+
+      Math.min(
+        MAX_ZOOM,
+
+        oldZoom * factor
+      )
+    );
+
+
+  if (
+    newZoom === oldZoom
+  ) {
+
+    return;
+
+  }
+
+
+  /*
+   * Convert screen coordinate
+   * to canvas coordinate.
+   */
+  const contentX =
+    (
+      screenX - ox
+    ) / oldZoom;
+
+
+  const contentY =
+    (
+      screenY - oy
+    ) / oldZoom;
+
+
+  zoom =
+    newZoom;
+
+
+  /*
+   * Keep that point stationary.
+   */
+  ox =
+    screenX -
+    contentX * zoom;
+
+
+  oy =
+    screenY -
+    contentY * zoom;
+
 
   apply();
 
@@ -2217,50 +2611,33 @@ function centerNode(node) {
 
 
   if (!element) {
+
     return;
+
   }
 
 
-  /*
-   * Use SVG bounding box rather than
-   * browser-scaled bounding rectangle.
-   */
-  const position =
+  const box =
     element.getBBox();
 
 
-  const viewportWidth =
-    viewport.clientWidth;
-
-
-  const viewportHeight =
-    viewport.clientHeight;
-
-
-  /*
-   * Current canvas coordinates
-   * of node center.
-   */
   const nodeX =
-    position.x +
-    position.width / 2;
+    box.x +
+    box.width / 2;
 
 
   const nodeY =
-    position.y +
-    position.height / 2;
+    box.y +
+    box.height / 2;
 
 
-  /*
-   * Center node in viewport.
-   */
   ox =
-    viewportWidth / 2 -
+    viewport.clientWidth / 2 -
     nodeX * zoom;
 
 
   oy =
-    viewportHeight / 2 -
+    viewport.clientHeight / 2 -
     nodeY * zoom;
 
 
@@ -2275,22 +2652,16 @@ function centerNode(node) {
 
 
 /* ============================================================
-   MOUSE WHEEL ZOOM
+   DESKTOP WHEEL ZOOM
    ============================================================ */
 
 viewport.addEventListener(
   "wheel",
   event => {
 
-    /*
-     * Prevent page scrolling.
-     */
     event.preventDefault();
 
 
-    /*
-     * Zoom around mouse position.
-     */
     const rect =
       viewport.getBoundingClientRect();
 
@@ -2305,10 +2676,13 @@ viewport.addEventListener(
       rect.top;
 
 
+    /*
+     * Smooth exponential zoom.
+     */
     const factor =
-      event.deltaY < 0
-        ? 1.15
-        : 1 / 1.15;
+      Math.exp(
+        -event.deltaY * 0.001
+      );
 
 
     zoomAroundPoint(
@@ -2333,51 +2707,63 @@ viewport.addEventListener(
   event => {
 
     /*
-     * Search UI must remain independent
-     * from viewport gestures.
+     * Search UI is independent.
      */
     if (
       event.target.closest(
         "#searchWrapper"
       )
     ) {
+
       return;
+
     }
 
 
     /*
-     * Node click should be handled
-     * by the node itself.
+     * Let nodes receive clicks.
      */
     if (
       event.target.closest(
         ".node"
       )
     ) {
+
       return;
+
     }
 
 
-    activePointers.set(
+    pointers.set(
       event.pointerId,
       {
-        x: event.clientX,
-        y: event.clientY
+
+        x:
+          event.clientX,
+
+        y:
+          event.clientY
+
       }
     );
 
 
-    viewport.setPointerCapture(
-      event.pointerId
-    );
+    try {
+
+      viewport.setPointerCapture(
+        event.pointerId
+      );
+
+    }
+    catch {}
 
 
-    /* ========================================================
-       TWO FINGERS
-       ======================================================== */
-
+    /*
+     * Two fingers:
+     * initialize pinch.
+     */
     if (
-      activePointers.size === 2
+      pointers.size === 2
     ) {
 
       lastPinchDistance =
@@ -2388,11 +2774,12 @@ viewport.addEventListener(
         getPinchCenter();
 
 
-      lastPointerPosition =
+      lastPanPoint =
         null;
 
 
-      dragging = false;
+      isDragging =
+        false;
 
 
       viewport.classList.remove(
@@ -2405,11 +2792,10 @@ viewport.addEventListener(
     }
 
 
-    /* ========================================================
-       ONE FINGER
-       ======================================================== */
-
-    lastPointerPosition = {
+    /*
+     * One finger / mouse.
+     */
+    lastPanPoint = {
 
       x:
         event.clientX,
@@ -2420,7 +2806,8 @@ viewport.addEventListener(
     };
 
 
-    dragging = true;
+    isDragging =
+      true;
 
 
     viewport.classList.add(
@@ -2440,32 +2827,36 @@ viewport.addEventListener(
   event => {
 
     if (
-      !activePointers.has(
+      !pointers.has(
         event.pointerId
       )
     ) {
+
       return;
+
     }
 
 
-    /*
-     * Update pointer.
-     */
-    activePointers.set(
+    pointers.set(
       event.pointerId,
       {
-        x: event.clientX,
-        y: event.clientY
+
+        x:
+          event.clientX,
+
+        y:
+          event.clientY
+
       }
     );
 
 
     /* ========================================================
-       TWO-FINGER PINCH
+       TWO FINGER PINCH
        ======================================================== */
 
     if (
-      activePointers.size === 2
+      pointers.size >= 2
     ) {
 
       const distance =
@@ -2482,35 +2873,34 @@ viewport.addEventListener(
         center
       ) {
 
-        const scale =
+        /*
+         * Pinch ratio.
+         */
+        const factor =
           distance /
           lastPinchDistance;
 
 
         /*
-         * Limit extremely large
-         * pointer jumps.
+         * Avoid jitter from tiny changes.
          */
-        const safeScale =
-          Math.max(
-            0.85,
-            Math.min(
-              1.15,
-              scale
-            )
+        if (
+          Math.abs(
+            factor - 1
+          ) > 0.002
+        ) {
+
+          zoomAroundPoint(
+            factor,
+            center.x,
+            center.y
           );
 
-
-        zoomAroundPoint(
-          safeScale,
-          center.x,
-          center.y
-        );
+        }
 
 
         /*
-         * Also pan with the midpoint
-         * of the two fingers.
+         * Two-finger movement also pans.
          */
         if (
           lastPinchCenter
@@ -2547,23 +2937,23 @@ viewport.addEventListener(
 
 
     /* ========================================================
-       ONE-FINGER PAN
+       ONE FINGER PAN
        ======================================================== */
 
     if (
-      activePointers.size === 1 &&
-      dragging &&
-      lastPointerPosition
+      pointers.size === 1 &&
+      isDragging &&
+      lastPanPoint
     ) {
 
       const dx =
         event.clientX -
-        lastPointerPosition.x;
+        lastPanPoint.x;
 
 
       const dy =
         event.clientY -
-        lastPointerPosition.y;
+        lastPanPoint.y;
 
 
       ox += dx;
@@ -2571,7 +2961,7 @@ viewport.addEventListener(
       oy += dy;
 
 
-      lastPointerPosition = {
+      lastPanPoint = {
 
         x:
           event.clientX,
@@ -2591,97 +2981,79 @@ viewport.addEventListener(
 
 
 /* ============================================================
-   POINTER UP
+   POINTER END
    ============================================================ */
+
+function releasePointer(
+  event
+) {
+
+  pointers.delete(
+    event.pointerId
+  );
+
+
+  if (
+    pointers.size < 2
+  ) {
+
+    lastPinchDistance =
+      null;
+
+    lastPinchCenter =
+      null;
+
+  }
+
+
+  if (
+    pointers.size === 0
+  ) {
+
+    isDragging =
+      false;
+
+
+    lastPanPoint =
+      null;
+
+
+    viewport.classList.remove(
+      "dragging"
+    );
+
+  }
+
+
+  try {
+
+    if (
+      viewport.hasPointerCapture(
+        event.pointerId
+      )
+    ) {
+
+      viewport.releasePointerCapture(
+        event.pointerId
+      );
+
+    }
+
+  }
+  catch {}
+
+}
+
 
 viewport.addEventListener(
   "pointerup",
-  event => {
-
-    activePointers.delete(
-      event.pointerId
-    );
-
-
-    /*
-     * Reset gesture state.
-     */
-    if (
-      activePointers.size < 2
-    ) {
-
-      lastPinchDistance =
-        null;
-
-      lastPinchCenter =
-        null;
-
-    }
-
-
-    if (
-      activePointers.size === 0
-    ) {
-
-      dragging = false;
-
-      lastPointerPosition =
-        null;
-
-
-      viewport.classList.remove(
-        "dragging"
-      );
-
-    }
-
-  }
+  releasePointer
 );
 
 
-/* ============================================================
-   POINTER CANCEL
-   ============================================================ */
-
 viewport.addEventListener(
   "pointercancel",
-  event => {
-
-    activePointers.delete(
-      event.pointerId
-    );
-
-
-    if (
-      activePointers.size < 2
-    ) {
-
-      lastPinchDistance =
-        null;
-
-      lastPinchCenter =
-        null;
-
-    }
-
-
-    if (
-      activePointers.size === 0
-    ) {
-
-      dragging = false;
-
-      lastPointerPosition =
-        null;
-
-
-      viewport.classList.remove(
-        "dragging"
-      );
-
-    }
-
-  }
+  releasePointer
 );
 
 
@@ -2692,13 +3064,15 @@ viewport.addEventListener(
 function getPinchDistance() {
 
   const points =
-    [...activePointers.values()];
+    [...pointers.values()];
 
 
   if (
     points.length < 2
   ) {
+
     return null;
+
   }
 
 
@@ -2727,13 +3101,15 @@ function getPinchDistance() {
 function getPinchCenter() {
 
   const points =
-    [...activePointers.values()];
+    [...pointers.values()];
 
 
   if (
     points.length < 2
   ) {
+
     return null;
+
   }
 
 
@@ -2744,6 +3120,7 @@ function getPinchCenter() {
         points[0].x +
         points[1].x
       ) / 2,
+
 
     y:
       (
@@ -2757,7 +3134,7 @@ function getPinchCenter() {
 
 
 /* ============================================================
-   CLOSE SEARCH WHEN CLICKING OUTSIDE
+   CLOSE SEARCH
    ============================================================ */
 
 document.addEventListener(
@@ -2770,12 +3147,8 @@ document.addEventListener(
       )
     ) {
 
-      if (searchResults) {
-
-        searchResults.style.display =
-          "none";
-
-      }
+      searchResults.style.display =
+        "none";
 
     }
 
@@ -2791,10 +3164,6 @@ window.addEventListener(
   "resize",
   () => {
 
-    /*
-     * Re-render because mobile
-     * dimensions may have changed.
-     */
     render();
 
   }
@@ -2802,7 +3171,7 @@ window.addEventListener(
 
 
 /* ============================================================
-   START APPLICATION
+   START
    ============================================================ */
 
 load();
@@ -2810,4 +3179,5 @@ load();
 </script>
 
 </body>
+
 </html>
