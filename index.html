@@ -3,177 +3,1668 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
+
 <title>UVM Hierarchy Viewer</title>
+
 <style>
-*{box-sizing:border-box}
-html,body{margin:0;width:100%;height:100%;overflow:hidden;font-family:Inter,system-ui,-apple-system,Segoe UI,Arial,sans-serif;background:#f6f7fb;color:#172033}
-#bar{height:60px;display:flex;align-items:center;gap:8px;padding:9px 12px;background:#fff;border-bottom:1px solid #e5e7eb;z-index:10;position:relative}
-button,input{height:40px;border:1px solid #d1d5db;background:#fff;border-radius:8px;font:inherit;color:#172033}
-button{padding:0 12px;cursor:pointer;font-weight:600}
-button:hover{background:#f3f4f6}
-#search{width:280px;padding:0 12px;outline:0}
-#search:focus{border-color:#6366f1;box-shadow:0 0 0 3px #eef2ff}
-#status{margin-left:auto;color:#667085;font-size:13px}
-#viewport{position:absolute;inset:60px 0 0;overflow:hidden;cursor:grab;
-background-color:#f8fafc;background-image:radial-gradient(#d8dee9 1px,transparent 1px);background-size:20px 20px}
-#viewport.dragging{cursor:grabbing}
-#canvas{position:absolute;left:0;top:0;transform-origin:0 0}
-svg{overflow:visible}
-.edge{fill:none;stroke:#b7bfcc;stroke-width:2}
-.node{cursor:pointer}
-.box{fill:#fff;stroke:#98a2b3;stroke-width:1.5}
-.node:hover .box{stroke:#6366f1;stroke-width:2}
-.node.selected .box{fill:#eef2ff;stroke:#4f46e5;stroke-width:2.5}
-.node.match .box{fill:#ecfdf3;stroke:#16a34a;stroke-width:3}
-.label{fill:#172033;font-size:14px;dominant-baseline:middle;pointer-events:none}
-.toggle{fill:#6366f1;stroke:#fff;stroke-width:2}
-.toggleText{fill:#fff;font-size:12px;font-weight:700;text-anchor:middle;dominant-baseline:central;pointer-events:none}
-#err{display:none;position:absolute;z-index:20;left:50%;top:50%;transform:translate(-50%,-50%);background:#fff;border:1px solid #fecaca;color:#991b1b;padding:18px 22px;border-radius:10px;box-shadow:0 10px 35px #0002;max-width:620px}
-@media(max-width:720px){#search{width:150px}.desktop{display:none}#status{display:none}}
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  font-family: Inter, system-ui, -apple-system, "Segoe UI", Arial, sans-serif;
+  background: #f6f7fb;
+  color: #172033;
+}
+
+/* =========================
+   TOOLBAR
+   ========================= */
+
+#bar {
+  height: 60px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 12px;
+  background: #fff;
+  border-bottom: 1px solid #e5e7eb;
+  z-index: 10;
+  position: relative;
+}
+
+button,
+input {
+  height: 40px;
+  border: 1px solid #d1d5db;
+  background: #fff;
+  border-radius: 8px;
+  font: inherit;
+  color: #172033;
+}
+
+button {
+  padding: 0 12px;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+button:hover {
+  background: #f3f4f6;
+}
+
+#search {
+  width: 280px;
+  padding: 0 12px;
+  outline: 0;
+}
+
+#search:focus {
+  border-color: #6366f1;
+  box-shadow: 0 0 0 3px #eef2ff;
+}
+
+#status {
+  margin-left: auto;
+  color: #667085;
+  font-size: 13px;
+}
+
+/* =========================
+   VIEWPORT
+   ========================= */
+
+#viewport {
+  position: absolute;
+  inset: 60px 0 0;
+  overflow: hidden;
+  cursor: grab;
+
+  background-color: #f8fafc;
+  background-image:
+    radial-gradient(#d8dee9 1px, transparent 1px);
+  background-size: 20px 20px;
+}
+
+#viewport.dragging {
+  cursor: grabbing;
+}
+
+#canvas {
+  position: absolute;
+  left: 0;
+  top: 0;
+  transform-origin: 0 0;
+}
+
+svg {
+  overflow: visible;
+}
+
+/* =========================
+   CONNECTIONS
+   ========================= */
+
+.edge {
+  fill: none;
+  stroke: #b7bfcc;
+  stroke-width: 2;
+}
+
+/* =========================
+   NODES
+   ========================= */
+
+.node {
+  cursor: pointer;
+}
+
+.box {
+  fill: #fff;
+  stroke: #98a2b3;
+  stroke-width: 1.5;
+}
+
+.node:hover .box {
+  stroke: #6366f1;
+  stroke-width: 2;
+}
+
+.node.selected .box {
+  fill: #eef2ff;
+  stroke: #4f46e5;
+  stroke-width: 2.5;
+}
+
+.node.match .box {
+  fill: #ecfdf3;
+  stroke: #16a34a;
+  stroke-width: 3;
+}
+
+/*
+ * IMPORTANT:
+ * No text truncation.
+ * The JavaScript dynamically sizes the box
+ * based on the complete node name.
+ */
+.label {
+  fill: #172033;
+  font-size: 14px;
+  font-weight: 500;
+  dominant-baseline: middle;
+  pointer-events: none;
+  white-space: nowrap;
+}
+
+/* =========================
+   EXPAND / COLLAPSE BUTTON
+   ========================= */
+
+.toggle {
+  fill: #6366f1;
+  stroke: #fff;
+  stroke-width: 2;
+}
+
+.toggleText {
+  fill: #fff;
+  font-size: 12px;
+  font-weight: 700;
+  text-anchor: middle;
+  dominant-baseline: central;
+  pointer-events: none;
+}
+
+/* =========================
+   ERROR
+   ========================= */
+
+#err {
+  display: none;
+
+  position: absolute;
+  z-index: 20;
+
+  left: 50%;
+  top: 50%;
+
+  transform: translate(-50%, -50%);
+
+  background: #fff;
+  border: 1px solid #fecaca;
+  color: #991b1b;
+
+  padding: 18px 22px;
+  border-radius: 10px;
+
+  box-shadow: 0 10px 35px #0002;
+
+  max-width: 620px;
+}
+
+/* =========================
+   MOBILE
+   ========================= */
+
+@media(max-width:720px) {
+
+  #search {
+    width: 150px;
+  }
+
+  .desktop {
+    display: none;
+  }
+
+  #status {
+    display: none;
+  }
+}
 </style>
 </head>
+
 <body>
+
+<!-- =========================
+     TOOLBAR
+     ========================= -->
+
 <div id="bar">
-  <button onclick="zoomAtCenter(1.2)">+</button>
-  <button onclick="zoomAtCenter(1/1.2)">−</button>
-  <button onclick="fit()">Fit</button>
-  <button class="desktop" onclick="resetView()">Reset</button>
-  <input id="search" placeholder="Search component…" autocomplete="off">
-  <button class="desktop" onclick="expandAll()">Expand all</button>
-  <button class="desktop" onclick="collapseAll()">Collapse all</button>
-  <span id="status">Loading…</span>
+
+  <button onclick="zoomAtCenter(1.2)">
+    +
+  </button>
+
+  <button onclick="zoomAtCenter(1/1.2)">
+    −
+  </button>
+
+  <button onclick="fit()">
+    Fit
+  </button>
+
+  <button class="desktop" onclick="resetView()">
+    Reset
+  </button>
+
+  <input
+    id="search"
+    placeholder="Search component…"
+    autocomplete="off"
+  >
+
+  <button
+    class="desktop"
+    onclick="expandAll()">
+    Expand all
+  </button>
+
+  <button
+    class="desktop"
+    onclick="collapseAll()">
+    Collapse all
+  </button>
+
+  <span id="status">
+    Loading…
+  </span>
+
 </div>
-<div id="viewport"><div id="canvas"><svg id="tree"></svg></div></div>
+
+
+<!-- =========================
+     VIEWPORT
+     ========================= -->
+
+<div id="viewport">
+
+  <div id="canvas">
+
+    <svg id="tree"></svg>
+
+  </div>
+
+</div>
+
+
 <div id="err"></div>
 
+
 <script>
-const XML_FILE="UVM_Hierarchy.xml";
-const W=220,H=48,HG=90,VG=24;
-const MIN=.06,MAX=4;
-let root=null, all=[], zoom=1, ox=60, oy=60, dragging=false, sx=0, sy=0;
 
-function showError(e){const x=document.getElementById("err");x.textContent=e;x.style.display="block"}
+/* ============================================================
+   CONFIGURATION
+   ============================================================ */
 
-async function load(){
- try{
-   let s=await (await fetch(XML_FILE)).text();
-   // Freeplane exports &nbsp;, which is not a predefined XML entity.
-   s=s.replace(/&nbsp;/g," ").replace(/&quot;/g,"\"");
-   const doc=new DOMParser().parseFromString(s,"application/xml");
-   if(doc.querySelector("parsererror")) throw Error("The XML could not be parsed.");
-   const el=doc.querySelector("node");
-   if(!el) throw Error("No hierarchy <node> was found.");
-   root=parse(el,null); all=[]; collect(root); render(); setTimeout(fit,80);
- }catch(e){console.error(e);showError("Could not load UVM_Hierarchy.xml: "+e.message)}
+const XML_FILE = "UVM_Hierarchy.xml";
+
+/*
+ * Minimum node width.
+ */
+const MIN_W = 220;
+
+/*
+ * Fixed node height.
+ */
+const H = 48;
+
+/*
+ * Horizontal gap between hierarchy levels.
+ */
+const HG = 90;
+
+/*
+ * Vertical gap between nodes.
+ */
+const VG = 24;
+
+/*
+ * Zoom limits.
+ */
+const MIN = 0.06;
+const MAX = 4;
+
+
+/* ============================================================
+   GLOBAL STATE
+   ============================================================ */
+
+let root = null;
+
+let all = [];
+
+let zoom = 1;
+
+let ox = 60;
+let oy = 60;
+
+let dragging = false;
+
+let sx = 0;
+let sy = 0;
+
+/*
+ * Width of every hierarchy column.
+ */
+let columnWidths = [];
+
+
+/* ============================================================
+   ERROR DISPLAY
+   ============================================================ */
+
+function showError(message) {
+
+  const errorBox = document.getElementById("err");
+
+  errorBox.innerHTML = "";
+
+  const msg = document.createElement("div");
+
+  msg.textContent = message;
+
+  errorBox.appendChild(msg);
+
+  const hint = document.createElement("div");
+
+  hint.style.marginTop = "8px";
+  hint.style.fontSize = "12px";
+  hint.style.color = "#667085";
+
+  hint.textContent =
+    "Make sure UVM_Hierarchy.xml is in the same folder as this HTML file.";
+
+  errorBox.appendChild(hint);
+
+  errorBox.style.display = "block";
 }
 
-function parse(el,parent){
- const n={
-   id:el.getAttribute("ID")||("n_"+Math.random().toString(36).slice(2)),
-   text:el.getAttribute("TEXT")||"(unnamed)",
-   parent, children:[],
-   expanded:el.getAttribute("FOLDED")!=="true",
-   style:el.getAttribute("STYLE")||"",
-   bg:el.getAttribute("BACKGROUND_COLOR")||""
- };
- for(const c of el.children)
-   if(c.tagName.toLowerCase()==="node") n.children.push(parse(c,n));
- return n;
-}
-function collect(n){all.push(n);n.children.forEach(collect)}
-function visible(){const a=[];(function walk(n){a.push(n);if(n.expanded)n.children.forEach(walk)})(root);return a}
 
-function layout(){
- const pos=new Map();let y=0;
- function place(n,d){
-   if(n.children.length&&n.expanded){
-     const ys=n.children.map(c=>place(c,d+1));
-     const py=(ys[0]+ys[ys.length-1])/2;
-     pos.set(n.id,{x:d*(W+HG),y:py});return py;
-   }
-   const py=y;y+=H+VG;pos.set(n.id,{x:d*(W+HG),y:py});return py;
- }
- place(root,0);return pos;
-}
+/* ============================================================
+   LOAD XML
+   ============================================================ */
 
-function render(){
- const svg=document.getElementById("tree");svg.innerHTML="";
- const vs=visible(),pos=layout();
- for(const n of vs){
-   if(!n.parent)continue;
-   const a=pos.get(n.parent.id),b=pos.get(n.id);if(!a||!b)continue;
-   const p=document.createElementNS("http://www.w3.org/2000/svg","path");
-   const x1=a.x+W,x2=b.x,m=(x1+x2)/2,y1=a.y+H/2,y2=b.y+H/2;
-   p.setAttribute("d",`M ${x1} ${y1} C ${m} ${y1}, ${m} ${y2}, ${x2} ${y2}`);
-   p.classList.add("edge");svg.appendChild(p);
- }
- for(const n of vs){
-   const p=pos.get(n.id);if(!p)continue;
-   const g=document.createElementNS("http://www.w3.org/2000/svg","g");g.classList.add("node");g.dataset.id=n.id;
-   const r=document.createElementNS("http://www.w3.org/2000/svg","rect");r.setAttribute("x",p.x);r.setAttribute("y",p.y);r.setAttribute("width",W);r.setAttribute("height",H);r.setAttribute("rx",9);r.classList.add("box");g.appendChild(r);
-   const t=document.createElementNS("http://www.w3.org/2000/svg","text");t.setAttribute("x",p.x+14);t.setAttribute("y",p.y+H/2);t.classList.add("label");t.textContent=n.text.length>27?n.text.slice(0,24)+"…":n.text;g.appendChild(t);
-   if(n.children.length){
-     const c=document.createElementNS("http://www.w3.org/2000/svg","circle");c.setAttribute("cx",p.x+W-16);c.setAttribute("cy",p.y+H/2);c.setAttribute("r",9);c.classList.add("toggle");g.appendChild(c);
-     const q=document.createElementNS("http://www.w3.org/2000/svg","text");q.setAttribute("x",p.x+W-16);q.setAttribute("y",p.y+H/2);q.classList.add("toggleText");q.textContent=n.expanded?"−":"+";g.appendChild(q);
-   }
-   g.addEventListener("click",e=>{e.stopPropagation();if(n.children.length){n.expanded=!n.expanded;render()}else select(n)});
-   g.addEventListener("dblclick",e=>{e.stopPropagation();center(n)});
-   svg.appendChild(g);
- }
- const vals=[...pos.values()];
- const maxX=Math.max(100,...vals.map(p=>p.x+W))+80,maxY=Math.max(100,...vals.map(p=>p.y+H))+80;
- svg.setAttribute("width",maxX);svg.setAttribute("height",maxY);svg.setAttribute("viewBox",`0 0 ${maxX} ${maxY}`);
- document.getElementById("status").textContent=`${all.length} nodes`;
- apply();
-}
+async function load() {
 
-function select(n){
- document.querySelectorAll(".node").forEach(x=>x.classList.remove("selected"));
- const e=document.querySelector(`[data-id="${CSS.escape(n.id)}"]`);if(e)e.classList.add("selected");
- document.getElementById("status").textContent=n.text;
-}
-function expandAll(){all.forEach(n=>n.expanded=true);render();setTimeout(fit,50)}
-function collapseAll(){all.forEach(n=>n.expanded=false);root.expanded=true;render();setTimeout(fit,50)}
+  try {
 
-document.getElementById("search").addEventListener("input",()=>{
- const q=document.getElementById("search").value.trim().toLowerCase();
- document.querySelectorAll(".node").forEach(x=>x.classList.remove("match"));
- if(!q){document.getElementById("status").textContent=`${all.length} nodes`;return}
- const hits=all.filter(n=>n.text.toLowerCase().includes(q));
- hits.forEach(n=>{let p=n.parent;while(p){p.expanded=true;p=p.parent}});
- render();
- hits.forEach(n=>{const e=document.querySelector(`[data-id="${CSS.escape(n.id)}"]`);if(e)e.classList.add("match")});
- document.getElementById("status").textContent=`${hits.length} match${hits.length===1?"":"es"}`;
-});
+    let response = await fetch(XML_FILE);
 
-function apply(){document.getElementById("canvas").style.transform=`translate(${ox}px,${oy}px) scale(${zoom})`}
-function zoomAtCenter(f){zoom=Math.max(MIN,Math.min(MAX,zoom*f));apply()}
-function resetView(){zoom=1;ox=60;oy=60;apply()}
+    if (!response.ok) {
+      throw new Error(
+        `HTTP ${response.status} while loading ${XML_FILE}`
+      );
+    }
 
-function fit(){
- const svg=document.getElementById("tree"),vw=viewport.clientWidth,vh=viewport.clientHeight;
- const w=parseFloat(svg.getAttribute("width"))||1,h=parseFloat(svg.getAttribute("height"))||1;
- zoom=Math.max(MIN,Math.min(1,Math.min((vw-80)/w,(vh-80)/h)));
- ox=(vw-w*zoom)/2;oy=(vh-h*zoom)/2;apply();
-}
-function center(n){
- const e=document.querySelector(`[data-id="${CSS.escape(n.id)}"]`);if(!e)return;
- const r=e.getBoundingClientRect(),v=viewport.getBoundingClientRect();
- ox+=v.left+v.width/2-(r.left+r.width/2);
- oy+=v.top+v.height/2-(r.top+r.height/2);apply();select(n);
+    let xmlText = await response.text();
+
+    /*
+     * Freeplane can export &nbsp;.
+     * XML DOMParser does not recognize this entity.
+     */
+    xmlText = xmlText.replace(/&nbsp;/g, " ");
+
+    const parser = new DOMParser();
+
+    const doc =
+      parser.parseFromString(xmlText, "application/xml");
+
+    const parserError =
+      doc.querySelector("parsererror");
+
+    if (parserError) {
+      throw new Error(
+        "The XML could not be parsed."
+      );
+    }
+
+    /*
+     * Find the first hierarchy node.
+     */
+    const rootElement =
+      doc.querySelector("node");
+
+    if (!rootElement) {
+      throw new Error(
+        "No hierarchy <node> was found."
+      );
+    }
+
+    /*
+     * Convert XML into our internal tree.
+     */
+    root = parseNode(rootElement, null);
+
+    all = [];
+
+    collect(root);
+
+    /*
+     * Render tree.
+     */
+    render();
+
+    /*
+     * Automatically fit after loading.
+     */
+    setTimeout(fit, 100);
+
+  }
+  catch (error) {
+
+    console.error(error);
+
+    showError(
+      "Could not load UVM_Hierarchy.xml: " +
+      error.message
+    );
+  }
 }
 
-const viewport=document.getElementById("viewport");
-viewport.addEventListener("wheel",e=>{e.preventDefault();zoomAtCenter(e.deltaY<0?1.15:1/1.15)},{passive:false});
-viewport.addEventListener("pointerdown",e=>{
- if(e.target.closest(".node"))return;
- dragging=true;viewport.classList.add("dragging");
- sx=e.clientX-ox;sy=e.clientY-oy;viewport.setPointerCapture(e.pointerId);
-});
-viewport.addEventListener("pointermove",e=>{if(!dragging)return;ox=e.clientX-sx;oy=e.clientY-sy;apply()});
-viewport.addEventListener("pointerup",e=>{dragging=false;viewport.classList.remove("dragging");try{viewport.releasePointerCapture(e.pointerId)}catch{}});
-window.addEventListener("resize",()=>{});
+
+/* ============================================================
+   PARSE XML NODE
+   ============================================================ */
+
+function parseNode(element, parent) {
+
+  const node = {
+
+    id:
+      element.getAttribute("ID") ||
+      ("node_" +
+       Math.random()
+         .toString(36)
+         .slice(2)),
+
+    text:
+      element.getAttribute("TEXT") ||
+      "(unnamed)",
+
+    parent: parent,
+
+    children: [],
+
+    /*
+     * Respect Freeplane FOLDED attribute.
+     */
+    expanded:
+      element.getAttribute("FOLDED") !== "true",
+
+    width: MIN_W,
+
+    height: H
+  };
+
+
+  /*
+   * IMPORTANT:
+   *
+   * Only <node> elements are hierarchy children.
+   *
+   * Elements such as:
+   * hook
+   * attribute
+   * richcontent
+   * map_styles
+   * stylenode
+   *
+   * are ignored.
+   */
+
+  for (const child of element.children) {
+
+    if (
+      child.tagName.toLowerCase() === "node"
+    ) {
+
+      node.children.push(
+        parseNode(child, node)
+      );
+
+    }
+
+  }
+
+  return node;
+}
+
+
+/* ============================================================
+   COLLECT ALL NODES
+   ============================================================ */
+
+function collect(node) {
+
+  all.push(node);
+
+  node.children.forEach(child => {
+    collect(child);
+  });
+}
+
+
+/* ============================================================
+   VISIBLE NODES
+   ============================================================ */
+
+function visible() {
+
+  const result = [];
+
+  function walk(node) {
+
+    result.push(node);
+
+    if (node.expanded) {
+
+      node.children.forEach(child => {
+        walk(child);
+      });
+
+    }
+  }
+
+  if (root) {
+    walk(root);
+  }
+
+  return result;
+}
+
+
+/* ============================================================
+   MEASURE TEXT
+   ============================================================ */
+
+function measureTextWidth(text) {
+
+  const canvas =
+    document.createElement("canvas");
+
+  const ctx =
+    canvas.getContext("2d");
+
+  /*
+   * Must match the SVG label font.
+   */
+  ctx.font =
+    '14px Inter, system-ui, -apple-system, "Segoe UI", Arial, sans-serif';
+
+  return Math.ceil(
+    ctx.measureText(text).width
+  );
+}
+
+
+/* ============================================================
+   CALCULATE NODE WIDTHS
+   ============================================================ */
+
+function prepareNodeSizes() {
+
+  columnWidths = [];
+
+  /*
+   * Calculate the width required for every node.
+   */
+  all.forEach(node => {
+
+    const textWidth =
+      measureTextWidth(node.text);
+
+    /*
+     * Horizontal padding:
+     *
+     * 14px left
+     * 14px right
+     *
+     * Plus additional space for
+     * the +/- button on parent nodes.
+     */
+
+    const toggleSpace =
+      node.children.length
+        ? 38
+        : 0;
+
+    node.width =
+      Math.max(
+        MIN_W,
+        textWidth +
+        28 +
+        toggleSpace
+      );
+
+    node.height = H;
+
+  });
+
+
+  /*
+   * Determine hierarchy depth.
+   */
+  all.forEach(node => {
+
+    let depth = 0;
+
+    let parent = node.parent;
+
+    while (parent) {
+
+      depth++;
+
+      parent = parent.parent;
+
+    }
+
+    /*
+     * Use the largest node width
+     * in each hierarchy column.
+     */
+    columnWidths[depth] =
+      Math.max(
+        columnWidths[depth] || MIN_W,
+        node.width
+      );
+
+  });
+
+}
+
+
+/* ============================================================
+   LAYOUT
+   ============================================================ */
+
+function layout() {
+
+  const positions = new Map();
+
+  let y = 0;
+
+  /*
+   * X position for each hierarchy depth.
+   */
+  const xByDepth = [];
+
+  let x = 0;
+
+  for (
+    let depth = 0;
+    depth < columnWidths.length;
+    depth++
+  ) {
+
+    xByDepth[depth] = x;
+
+    x +=
+      columnWidths[depth] +
+      HG;
+
+  }
+
+
+  function place(node, depth) {
+
+    /*
+     * Expanded parent.
+     */
+    if (
+      node.children.length &&
+      node.expanded
+    ) {
+
+      const childYs =
+        node.children.map(child => {
+
+          return place(
+            child,
+            depth + 1
+          );
+
+        });
+
+
+      /*
+       * Center parent around children.
+       */
+      const parentY =
+        (
+          childYs[0] +
+          childYs[childYs.length - 1]
+        ) / 2;
+
+
+      positions.set(
+        node.id,
+        {
+          x: xByDepth[depth],
+          y: parentY,
+          width: columnWidths[depth],
+          height: H
+        }
+      );
+
+      return parentY;
+
+    }
+
+
+    /*
+     * Leaf / collapsed node.
+     */
+    const nodeY = y;
+
+    y += H + VG;
+
+    positions.set(
+      node.id,
+      {
+        x: xByDepth[depth],
+        y: nodeY,
+        width: columnWidths[depth],
+        height: H
+      }
+    );
+
+    return nodeY;
+
+  }
+
+
+  place(root, 0);
+
+  return positions;
+}
+
+
+/* ============================================================
+   RENDER TREE
+   ============================================================ */
+
+function render() {
+
+  const svg =
+    document.getElementById("tree");
+
+  svg.innerHTML = "";
+
+
+  /*
+   * Calculate widths before layout.
+   */
+  prepareNodeSizes();
+
+
+  const visibleNodes =
+    visible();
+
+  const positions =
+    layout();
+
+
+  /* ========================================================
+     DRAW CONNECTIONS
+     ======================================================== */
+
+  for (const node of visibleNodes) {
+
+    if (!node.parent) {
+      continue;
+    }
+
+    const parentPosition =
+      positions.get(
+        node.parent.id
+      );
+
+    const nodePosition =
+      positions.get(
+        node.id
+      );
+
+    if (
+      !parentPosition ||
+      !nodePosition
+    ) {
+      continue;
+    }
+
+
+    const path =
+      document.createElementNS(
+        "http://www.w3.org/2000/svg",
+        "path"
+      );
+
+
+    /*
+     * Start at right edge of parent.
+     */
+    const x1 =
+      parentPosition.x +
+      parentPosition.width;
+
+
+    /*
+     * End at left edge of child.
+     */
+    const x2 =
+      nodePosition.x;
+
+
+    /*
+     * Bezier midpoint.
+     */
+    const middle =
+      (x1 + x2) / 2;
+
+
+    const y1 =
+      parentPosition.y +
+      parentPosition.height / 2;
+
+
+    const y2 =
+      nodePosition.y +
+      nodePosition.height / 2;
+
+
+    path.setAttribute(
+      "d",
+      `
+      M ${x1} ${y1}
+      C ${middle} ${y1},
+        ${middle} ${y2},
+        ${x2} ${y2}
+      `
+    );
+
+    path.classList.add("edge");
+
+    svg.appendChild(path);
+
+  }
+
+
+  /* ========================================================
+     DRAW NODES
+     ======================================================== */
+
+  for (const node of visibleNodes) {
+
+    const position =
+      positions.get(node.id);
+
+    if (!position) {
+      continue;
+    }
+
+
+    const group =
+      document.createElementNS(
+        "http://www.w3.org/2000/svg",
+        "g"
+      );
+
+    group.classList.add("node");
+
+    group.dataset.id =
+      node.id;
+
+
+    /* ======================================================
+       NODE BOX
+       ====================================================== */
+
+    const rect =
+      document.createElementNS(
+        "http://www.w3.org/2000/svg",
+        "rect"
+      );
+
+    rect.setAttribute(
+      "x",
+      position.x
+    );
+
+    rect.setAttribute(
+      "y",
+      position.y
+    );
+
+    rect.setAttribute(
+      "width",
+      position.width
+    );
+
+    rect.setAttribute(
+      "height",
+      position.height
+    );
+
+    rect.setAttribute(
+      "rx",
+      9
+    );
+
+    rect.classList.add("box");
+
+    group.appendChild(rect);
+
+
+    /* ======================================================
+       NODE LABEL
+       ====================================================== */
+
+    const text =
+      document.createElementNS(
+        "http://www.w3.org/2000/svg",
+        "text"
+      );
+
+    text.setAttribute(
+      "x",
+      position.x + 14
+    );
+
+    text.setAttribute(
+      "y",
+      position.y +
+      position.height / 2
+    );
+
+    text.classList.add("label");
+
+    /*
+     * IMPORTANT:
+     *
+     * Use the COMPLETE node name.
+     *
+     * No:
+     * substring()
+     * slice()
+     * ellipsis
+     * text-overflow
+     *
+     */
+    text.textContent =
+      node.text;
+
+    group.appendChild(text);
+
+
+    /* ======================================================
+       EXPAND / COLLAPSE BUTTON
+       ====================================================== */
+
+    if (node.children.length) {
+
+      const circle =
+        document.createElementNS(
+          "http://www.w3.org/2000/svg",
+          "circle"
+        );
+
+      circle.setAttribute(
+        "cx",
+        position.x +
+        position.width -
+        16
+      );
+
+      circle.setAttribute(
+        "cy",
+        position.y +
+        position.height / 2
+      );
+
+      circle.setAttribute(
+        "r",
+        9
+      );
+
+      circle.classList.add("toggle");
+
+      group.appendChild(circle);
+
+
+      const toggleText =
+        document.createElementNS(
+          "http://www.w3.org/2000/svg",
+          "text"
+        );
+
+      toggleText.setAttribute(
+        "x",
+        position.x +
+        position.width -
+        16
+      );
+
+      toggleText.setAttribute(
+        "y",
+        position.y +
+        position.height / 2
+      );
+
+      toggleText.classList.add(
+        "toggleText"
+      );
+
+      toggleText.textContent =
+        node.expanded
+          ? "−"
+          : "+";
+
+      group.appendChild(
+        toggleText
+      );
+
+    }
+
+
+    /* ======================================================
+       CLICK
+       ====================================================== */
+
+    group.addEventListener(
+      "click",
+      event => {
+
+        event.stopPropagation();
+
+        if (node.children.length) {
+
+          node.expanded =
+            !node.expanded;
+
+          render();
+
+        }
+        else {
+
+          select(node);
+
+        }
+
+      }
+    );
+
+
+    /* ======================================================
+       DOUBLE CLICK
+       ====================================================== */
+
+    group.addEventListener(
+      "dblclick",
+      event => {
+
+        event.stopPropagation();
+
+        center(node);
+
+      }
+    );
+
+
+    svg.appendChild(group);
+
+  }
+
+
+  /* ========================================================
+     SVG SIZE
+     ======================================================== */
+
+  const positionsArray =
+    [...positions.values()];
+
+
+  /*
+   * IMPORTANT:
+   *
+   * Use the actual dynamic width,
+   * not a fixed W value.
+   */
+
+  const maxX =
+    Math.max(
+      100,
+      ...positionsArray.map(
+        p => p.x + p.width
+      )
+    ) + 80;
+
+
+  const maxY =
+    Math.max(
+      100,
+      ...positionsArray.map(
+        p => p.y + p.height
+      )
+    ) + 80;
+
+
+  svg.setAttribute(
+    "width",
+    maxX
+  );
+
+  svg.setAttribute(
+    "height",
+    maxY
+  );
+
+  svg.setAttribute(
+    "viewBox",
+    `0 0 ${maxX} ${maxY}`
+  );
+
+
+  document.getElementById(
+    "status"
+  ).textContent =
+    `${all.length} nodes`;
+
+
+  apply();
+
+}
+
+
+/* ============================================================
+   SELECT NODE
+   ============================================================ */
+
+function select(node) {
+
+  document
+    .querySelectorAll(".node")
+    .forEach(element => {
+
+      element.classList.remove(
+        "selected"
+      );
+
+    });
+
+
+  const element =
+    document.querySelector(
+      `[data-id="${CSS.escape(node.id)}"]`
+    );
+
+
+  if (element) {
+
+    element.classList.add(
+      "selected"
+    );
+
+  }
+
+
+  document.getElementById(
+    "status"
+  ).textContent =
+    node.text;
+
+}
+
+
+/* ============================================================
+   EXPAND ALL
+   ============================================================ */
+
+function expandAll() {
+
+  all.forEach(node => {
+
+    node.expanded = true;
+
+  });
+
+  render();
+
+  setTimeout(
+    fit,
+    50
+  );
+
+}
+
+
+/* ============================================================
+   COLLAPSE ALL
+   ============================================================ */
+
+function collapseAll() {
+
+  all.forEach(node => {
+
+    node.expanded = false;
+
+  });
+
+
+  /*
+   * Keep root visible.
+   */
+  root.expanded = true;
+
+  render();
+
+  setTimeout(
+    fit,
+    50
+  );
+
+}
+
+
+/* ============================================================
+   SEARCH
+   ============================================================ */
+
+document
+  .getElementById("search")
+  .addEventListener(
+    "input",
+    () => {
+
+      const query =
+        document
+          .getElementById("search")
+          .value
+          .trim()
+          .toLowerCase();
+
+
+      /*
+       * Clear old matches.
+       */
+      document
+        .querySelectorAll(".node")
+        .forEach(element => {
+
+          element.classList.remove(
+            "match"
+          );
+
+        });
+
+
+      if (!query) {
+
+        document.getElementById(
+          "status"
+        ).textContent =
+          `${all.length} nodes`;
+
+        return;
+
+      }
+
+
+      /*
+       * Find matching nodes.
+       */
+      const matches =
+        all.filter(node =>
+          node.text
+            .toLowerCase()
+            .includes(query)
+        );
+
+
+      /*
+       * Expand parents of matches.
+       */
+      matches.forEach(node => {
+
+        let parent =
+          node.parent;
+
+        while (parent) {
+
+          parent.expanded = true;
+
+          parent =
+            parent.parent;
+
+        }
+
+      });
+
+
+      render();
+
+
+      /*
+       * Highlight matches.
+       */
+      matches.forEach(node => {
+
+        const element =
+          document.querySelector(
+            `[data-id="${CSS.escape(node.id)}"]`
+          );
+
+        if (element) {
+
+          element.classList.add(
+            "match"
+          );
+
+        }
+
+      });
+
+
+      document.getElementById(
+        "status"
+      ).textContent =
+        `${matches.length} match${
+          matches.length === 1
+            ? ""
+            : "es"
+        }`;
+
+    }
+  );
+
+
+/* ============================================================
+   VIEW TRANSFORM
+   ============================================================ */
+
+function apply() {
+
+  document.getElementById(
+    "canvas"
+  ).style.transform =
+    `translate(${ox}px, ${oy}px) scale(${zoom})`;
+
+}
+
+
+/* ============================================================
+   ZOOM
+   ============================================================ */
+
+function zoomAtCenter(factor) {
+
+  zoom =
+    Math.max(
+      MIN,
+      Math.min(
+        MAX,
+        zoom * factor
+      )
+    );
+
+  apply();
+
+}
+
+
+/* ============================================================
+   RESET
+   ============================================================ */
+
+function resetView() {
+
+  zoom = 1;
+
+  ox = 60;
+
+  oy = 60;
+
+  apply();
+
+}
+
+
+/* ============================================================
+   FIT TO SCREEN
+   ============================================================ */
+
+function fit() {
+
+  const svg =
+    document.getElementById("tree");
+
+  const viewport =
+    document.getElementById("viewport");
+
+
+  const viewportWidth =
+    viewport.clientWidth;
+
+  const viewportHeight =
+    viewport.clientHeight;
+
+
+  const width =
+    parseFloat(
+      svg.getAttribute("width")
+    ) || 1;
+
+
+  const height =
+    parseFloat(
+      svg.getAttribute("height")
+    ) || 1;
+
+
+  zoom =
+    Math.max(
+      MIN,
+      Math.min(
+        1,
+        Math.min(
+          (viewportWidth - 80) / width,
+          (viewportHeight - 80) / height
+        )
+      )
+    );
+
+
+  ox =
+    (viewportWidth -
+     width * zoom) / 2;
+
+
+  oy =
+    (viewportHeight -
+     height * zoom) / 2;
+
+
+  apply();
+
+}
+
+
+/* ============================================================
+   CENTER NODE
+   ============================================================ */
+
+function center(node) {
+
+  const element =
+    document.querySelector(
+      `[data-id="${CSS.escape(node.id)}"]`
+    );
+
+
+  if (!element) {
+    return;
+  }
+
+
+  const rect =
+    element.getBoundingClientRect();
+
+
+  const viewport =
+    document.getElementById(
+      "viewport"
+    );
+
+
+  const viewportRect =
+    viewport.getBoundingClientRect();
+
+
+  ox +=
+    viewportRect.left +
+    viewportRect.width / 2 -
+    (rect.left + rect.width / 2);
+
+
+  oy +=
+    viewportRect.top +
+    viewportRect.height / 2 -
+    (rect.top + rect.height / 2);
+
+
+  apply();
+
+  select(node);
+
+}
+
+
+/* ============================================================
+   MOUSE WHEEL ZOOM
+   ============================================================ */
+
+const viewport =
+  document.getElementById(
+    "viewport"
+  );
+
+
+viewport.addEventListener(
+  "wheel",
+  event => {
+
+    event.preventDefault();
+
+    zoomAtCenter(
+      event.deltaY < 0
+        ? 1.15
+        : 1 / 1.15
+    );
+
+  },
+  {
+    passive: false
+  }
+);
+
+
+/* ============================================================
+   DRAG / PAN
+   ============================================================ */
+
+viewport.addEventListener(
+  "pointerdown",
+  event => {
+
+    /*
+     * Don't pan when clicking a node.
+     */
+    if (
+      event.target.closest(".node")
+    ) {
+      return;
+    }
+
+
+    dragging = true;
+
+    viewport.classList.add(
+      "dragging"
+    );
+
+
+    sx =
+      event.clientX - ox;
+
+    sy =
+      event.clientY - oy;
+
+
+    viewport.setPointerCapture(
+      event.pointerId
+    );
+
+  }
+);
+
+
+viewport.addEventListener(
+  "pointermove",
+  event => {
+
+    if (!dragging) {
+      return;
+    }
+
+
+    ox =
+      event.clientX - sx;
+
+    oy =
+      event.clientY - sy;
+
+
+    apply();
+
+  }
+);
+
+
+viewport.addEventListener(
+  "pointerup",
+  event => {
+
+    dragging = false;
+
+    viewport.classList.remove(
+      "dragging"
+    );
+
+
+    try {
+
+      viewport.releasePointerCapture(
+        event.pointerId
+      );
+
+    }
+    catch {}
+
+  }
+);
+
+
+/* ============================================================
+   START
+   ============================================================ */
+
 load();
+
 </script>
+
 </body>
 </html>
