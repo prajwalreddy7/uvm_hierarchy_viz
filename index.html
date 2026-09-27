@@ -97,13 +97,14 @@ button:hover {
 #viewport {
   position: absolute;
   inset: 60px 0 0;
-  overflow: hidden;
-  cursor: grab;
 
-  /* BLACK BACKGROUND */
+  overflow: hidden;
+
+  cursor: grab;
+  touch-action: none;
+
   background-color: #000000;
 
-  /* Subtle grid */
   background-image:
     radial-gradient(
       #222222 1px,
@@ -117,6 +118,11 @@ button:hover {
   cursor: grabbing;
 }
 
+
+/* ============================================================
+   CANVAS
+   ============================================================ */
+
 #canvas {
   position: absolute;
 
@@ -124,10 +130,118 @@ button:hover {
   top: 0;
 
   transform-origin: 0 0;
+
+  will-change: transform;
 }
 
 svg {
   overflow: visible;
+}
+
+
+/* ============================================================
+   MOBILE RESPONSIVE UI
+   ============================================================ */
+
+@media (max-width: 768px) {
+
+  #bar {
+    height: 56px;
+
+    padding: 7px;
+
+    gap: 5px;
+
+    overflow-x: auto;
+
+    white-space: nowrap;
+  }
+
+  #bar button {
+    height: 38px;
+
+    min-width: 38px;
+
+    padding: 0 9px;
+
+    font-size: 13px;
+  }
+
+  #search {
+    width: 150px;
+
+    min-width: 150px;
+
+    height: 38px;
+
+    font-size: 13px;
+  }
+
+  #status {
+    display: none;
+  }
+
+  #viewport {
+    inset: 56px 0 0;
+
+    /*
+     * Allows touch dragging without
+     * browser page scrolling.
+     */
+    touch-action: none;
+  }
+
+  /*
+   * Slightly smaller text on phones.
+   */
+  .label {
+    font-size: 13px;
+    font-weight: 700;
+  }
+
+}
+
+
+/* ============================================================
+   SMALL PHONE
+   ============================================================ */
+
+@media (max-width: 480px) {
+
+  #bar {
+    height: 52px;
+
+    padding: 6px;
+  }
+
+  #bar button {
+    height: 36px;
+
+    min-width: 36px;
+
+    padding: 0 8px;
+
+    font-size: 12px;
+  }
+
+  #search {
+    width: 135px;
+
+    min-width: 135px;
+
+    height: 36px;
+
+    font-size: 12px;
+  }
+
+  #viewport {
+    inset: 52px 0 0;
+  }
+
+  .desktop {
+    display: none !important;
+  }
+
 }
 
 
@@ -1617,15 +1731,23 @@ viewport.addEventListener(
 
 
 /* ============================================================
-   DRAG / PAN
+   PAN + TOUCH SUPPORT
    ============================================================ */
 
+let activePointers = new Map();
+
+let lastTouchDistance = null;
+
+
+/*
+ * Pointer down
+ */
 viewport.addEventListener(
   "pointerdown",
   event => {
 
     /*
-     * Don't pan when clicking a node.
+     * Don't start dragging when clicking a node.
      */
     if (
       event.target.closest(".node")
@@ -1633,6 +1755,17 @@ viewport.addEventListener(
       return;
     }
 
+    activePointers.set(
+      event.pointerId,
+      {
+        x: event.clientX,
+        y: event.clientY
+      }
+    );
+
+    viewport.setPointerCapture(
+      event.pointerId
+    );
 
     dragging = true;
 
@@ -1640,63 +1773,108 @@ viewport.addEventListener(
       "dragging"
     );
 
-
-    sx =
-      event.clientX - ox;
-
-    sy =
-      event.clientY - oy;
-
-
-    viewport.setPointerCapture(
-      event.pointerId
-    );
-
   }
 );
 
 
+/*
+ * Pointer move
+ */
 viewport.addEventListener(
   "pointermove",
   event => {
 
-    if (!dragging) {
+    if (
+      !activePointers.has(
+        event.pointerId
+      )
+    ) {
       return;
     }
 
-
-    ox =
-      event.clientX - sx;
-
-    oy =
-      event.clientY - sy;
+    const previous =
+      activePointers.get(
+        event.pointerId
+      );
 
 
-    apply();
+    const dx =
+      event.clientX -
+      previous.x;
+
+    const dy =
+      event.clientY -
+      previous.y;
+
+
+    /*
+     * One finger / mouse:
+     * Pan the hierarchy.
+     */
+    if (
+      activePointers.size === 1
+    ) {
+
+      ox += dx;
+      oy += dy;
+
+      apply();
+
+    }
+
+
+    /*
+     * Update pointer position.
+     */
+    activePointers.set(
+      event.pointerId,
+      {
+        x: event.clientX,
+        y: event.clientY
+      }
+    );
 
   }
 );
 
 
+/*
+ * Pointer up
+ */
 viewport.addEventListener(
   "pointerup",
   event => {
 
-    dragging = false;
-
-    viewport.classList.remove(
-      "dragging"
+    activePointers.delete(
+      event.pointerId
     );
 
+    if (
+      activePointers.size === 0
+    ) {
 
-    try {
+      dragging = false;
 
-      viewport.releasePointerCapture(
-        event.pointerId
+      viewport.classList.remove(
+        "dragging"
       );
 
     }
-    catch {}
+
+  }
+);
+
+
+/*
+ * Pointer cancel
+ */
+viewport.addEventListener(
+  "pointercancel",
+  event => {
+
+    activePointers.delete(
+      event.pointerId
+    );
 
   }
 );
