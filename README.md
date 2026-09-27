@@ -14,7 +14,7 @@ For an offline and more detailed mind-map view, you can download the **Freeplane
 
 ### ⬇️ Download Freeplane
 
-👉 **[Download Freeplane](https://freeplane.org/)**
+ **[Download Freeplane](https://docs.freeplane.org/getting-started/getting-started.html)**
 
 Freeplane is a free and open-source mind-mapping application.
 
@@ -28,11 +28,11 @@ Freeplane is a free and open-source mind-mapping application.
 
 The web viewer supports:
 
-- 🔽 Expand and collapse parent/child nodes
-- 🔍 Zoom in and out
-- 🖱️ Interactive navigation
-- 🌳 Hierarchical visualization of UVM classes
-- 📱 Clean and responsive interface
+- Expand and collapse parent/child nodes
+- Zoom in and out
+- Interactive navigation
+- Hierarchical visualization of UVM classes
+- Clean and responsive interface
 
 No installation is required.
 
