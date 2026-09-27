@@ -179,6 +179,11 @@ button:hover {
   overflow: hidden;
 
   cursor: grab;
+
+  /*
+   * Critical for mobile:
+   * allows JavaScript to handle touch gestures.
+   */
   touch-action: none;
 
   background-color: #000000;
@@ -198,27 +203,112 @@ button:hover {
 
 
 /* ============================================================
-   CANVAS
+   SEARCH WRAPPER
    ============================================================ */
 
-#canvas {
-  position: absolute;
-
-  left: 0;
-  top: 0;
-
-  transform-origin: 0 0;
-
-  will-change: transform;
+#searchWrapper {
+  position: relative;
+  z-index: 1000;
 }
 
-svg {
-  overflow: visible;
+#search {
+  width: 280px;
+  height: 40px;
+
+  padding: 0 12px;
+
+  background: #1c1c1c;
+  color: #ffffff;
+
+  border: 1px solid #444444;
+  border-radius: 8px;
+
+  outline: none;
+}
+
+#search:focus {
+  border-color: #6366f1;
 }
 
 
 /* ============================================================
-   MOBILE RESPONSIVE UI
+   SEARCH RESULTS
+   ============================================================ */
+
+#searchResults {
+  display: none;
+
+  position: absolute;
+
+  top: 44px;
+  left: 0;
+
+  width: 320px;
+
+  max-height: 300px;
+
+  overflow-y: auto;
+
+  background: #111111;
+
+  border: 1px solid #444444;
+
+  border-radius: 8px;
+
+  box-shadow:
+    0 10px 30px rgba(0,0,0,.8);
+
+  z-index: 2000;
+
+  /*
+   * Allow scrolling the search results
+   * on mobile.
+   */
+  touch-action: pan-y;
+}
+
+
+.searchResult {
+  padding: 11px 13px;
+
+  color: #ffffff;
+
+  font-size: 13px;
+
+  font-weight: 600;
+
+  cursor: pointer;
+
+  border-bottom:
+    1px solid #2a2a2a;
+
+  white-space: nowrap;
+
+  overflow: hidden;
+
+  text-overflow: ellipsis;
+
+  /*
+   * Makes tapping easier on phones.
+   */
+  min-height: 42px;
+
+  display: flex;
+  align-items: center;
+}
+
+
+.searchResult:hover {
+  background: #292929;
+}
+
+.searchResult:active {
+  background: #3b3b3b;
+}
+
+
+/* ============================================================
+   MOBILE TOOLBAR
    ============================================================ */
 
 @media (max-width: 768px) {
@@ -230,58 +320,52 @@ svg {
 
     gap: 5px;
 
-    overflow-x: auto;
+    overflow: visible;
 
     white-space: nowrap;
   }
 
-  #bar button {
-    height: 38px;
+  #searchWrapper {
+    flex: 1;
 
-    min-width: 38px;
-
-    padding: 0 9px;
-
-    font-size: 13px;
+    min-width: 0;
   }
 
   #search {
-    width: 150px;
+    width: 100%;
 
-    min-width: 150px;
+    min-width: 0;
 
     height: 38px;
 
-    font-size: 13px;
+    font-size: 14px;
   }
 
-  #status {
-    display: none;
+  #searchResults {
+    width: min(
+      320px,
+      calc(100vw - 20px)
+    );
+
+    max-height: 50vh;
+
+    /*
+     * Keep results inside the phone screen.
+     */
+    max-width: calc(100vw - 20px);
   }
 
   #viewport {
     inset: 56px 0 0;
 
-    /*
-     * Allows touch dragging without
-     * browser page scrolling.
-     */
     touch-action: none;
-  }
-
-  /*
-   * Slightly smaller text on phones.
-   */
-  .label {
-    font-size: 13px;
-    font-weight: 700;
   }
 
 }
 
 
 /* ============================================================
-   SMALL PHONE
+   SMALL PHONES
    ============================================================ */
 
 @media (max-width: 480px) {
@@ -292,24 +376,18 @@ svg {
     padding: 6px;
   }
 
-  #bar button {
+  #search {
     height: 36px;
 
-    min-width: 36px;
-
-    padding: 0 8px;
-
-    font-size: 12px;
+    font-size: 13px;
   }
 
-  #search {
-    width: 135px;
+  #searchResults {
+    top: 41px;
 
-    min-width: 135px;
+    width: calc(100vw - 20px);
 
-    height: 36px;
-
-    font-size: 12px;
+    max-height: 55vh;
   }
 
   #viewport {
@@ -484,7 +562,7 @@ svg {
     Fit
   </button>
 
-  <button class="desktop" onclick="resetView()">
+  <button onclick="resetView()">
     Reset
   </button>
 
@@ -492,7 +570,7 @@ svg {
 
   <input
     id="search"
-    placeholder="Search UVM component…"
+    placeholder="Search UVM class…"
     autocomplete="off"
   >
 
@@ -501,13 +579,11 @@ svg {
 </div>
 
   <button
-    class="desktop"
     onclick="expandAll()">
     Expand all
   </button>
 
   <button
-    class="desktop"
     onclick="collapseAll()">
     Collapse all
   </button>
@@ -538,36 +614,18 @@ svg {
 
 
 <script>
-
-/* ============================================================
-   CONFIGURATION
+    /* ============================================================
+   UVM HIERARCHY VIEWER
+   FINAL JAVASCRIPT
    ============================================================ */
 
 const XML_FILE = "UVM_Hierarchy.xml";
 
-/*
- * Minimum node width.
- */
 const MIN_W = 220;
-
-/*
- * Fixed node height.
- */
 const H = 48;
-
-/*
- * Horizontal gap between hierarchy levels.
- */
 const HG = 90;
-
-/*
- * Vertical gap between nodes.
- */
 const VG = 24;
 
-/*
- * Zoom limits.
- */
 const MIN = 0.06;
 const MAX = 4;
 
@@ -577,7 +635,6 @@ const MAX = 4;
    ============================================================ */
 
 let root = null;
-
 let all = [];
 
 let zoom = 1;
@@ -587,13 +644,46 @@ let oy = 60;
 
 let dragging = false;
 
-let sx = 0;
-let sy = 0;
-
-/*
- * Width of every hierarchy column.
- */
 let columnWidths = [];
+
+
+/* ============================================================
+   MOBILE / POINTER STATE
+   ============================================================ */
+
+let activePointers = new Map();
+
+let lastPointerPosition = null;
+
+let lastPinchDistance = null;
+
+let lastPinchCenter = null;
+
+
+/* ============================================================
+   DOM REFERENCES
+   ============================================================ */
+
+const viewport =
+  document.getElementById("viewport");
+
+const canvas =
+  document.getElementById("canvas");
+
+const svg =
+  document.getElementById("tree");
+
+const searchInput =
+  document.getElementById("search");
+
+const searchResults =
+  document.getElementById("searchResults");
+
+const status =
+  document.getElementById("status");
+
+const errorBox =
+  document.getElementById("err");
 
 
 /* ============================================================
@@ -602,21 +692,29 @@ let columnWidths = [];
 
 function showError(message) {
 
-  const errorBox = document.getElementById("err");
+  if (!errorBox) {
+    alert(message);
+    return;
+  }
 
   errorBox.innerHTML = "";
 
-  const msg = document.createElement("div");
+  const messageElement =
+    document.createElement("div");
 
-  msg.textContent = message;
+  messageElement.textContent =
+    message;
 
-  errorBox.appendChild(msg);
+  errorBox.appendChild(
+    messageElement
+  );
 
-  const hint = document.createElement("div");
+  const hint =
+    document.createElement("div");
 
   hint.style.marginTop = "8px";
   hint.style.fontSize = "12px";
-  hint.style.color = "#667085";
+  hint.style.color = "#999999";
 
   hint.textContent =
     "Make sure UVM_Hierarchy.xml is in the same folder as this HTML file.";
@@ -635,66 +733,97 @@ async function load() {
 
   try {
 
-    let response = await fetch(XML_FILE);
+    const response =
+      await fetch(XML_FILE);
 
     if (!response.ok) {
+
       throw new Error(
-        `HTTP ${response.status} while loading ${XML_FILE}`
+        `HTTP ${response.status}`
       );
+
     }
 
-    let xmlText = await response.text();
+    let xmlText =
+      await response.text();
+
 
     /*
-     * Freeplane can export &nbsp;.
-     * XML DOMParser does not recognize this entity.
+     * Freeplane may contain &nbsp;.
+     * DOMParser XML mode does not recognize it.
      */
-    xmlText = xmlText.replace(/&nbsp;/g, " ");
+    xmlText =
+      xmlText.replace(
+        /&nbsp;/g,
+        " "
+      );
 
-    const parser = new DOMParser();
+
+    const parser =
+      new DOMParser();
+
 
     const doc =
-      parser.parseFromString(xmlText, "application/xml");
+      parser.parseFromString(
+        xmlText,
+        "application/xml"
+      );
+
 
     const parserError =
-      doc.querySelector("parsererror");
+      doc.querySelector(
+        "parsererror"
+      );
+
 
     if (parserError) {
+
       throw new Error(
         "The XML could not be parsed."
       );
+
     }
 
+
     /*
-     * Find the first hierarchy node.
+     * First <node> is the hierarchy root.
      */
     const rootElement =
       doc.querySelector("node");
 
+
     if (!rootElement) {
+
       throw new Error(
-        "No hierarchy <node> was found."
+        "No hierarchy node was found."
       );
+
     }
 
-    /*
-     * Convert XML into our internal tree.
-     */
-    root = parseNode(rootElement, null);
+
+    root =
+      parseNode(
+        rootElement,
+        null
+      );
+
 
     all = [];
 
     collect(root);
 
-    /*
-     * Render tree.
-     */
+
     render();
 
+
     /*
-     * Automatically fit after loading.
+     * Fit after browser has
+     * calculated the SVG size.
      */
-    setTimeout(fit, 100);
+    setTimeout(
+      fit,
+      100
+    );
 
   }
   catch (error) {
@@ -705,24 +834,31 @@ async function load() {
       "Could not load UVM_Hierarchy.xml: " +
       error.message
     );
+
   }
+
 }
 
 
 /* ============================================================
-   PARSE XML NODE
+   PARSE FREEPLANE NODE
    ============================================================ */
 
-function parseNode(element, parent) {
+function parseNode(
+  element,
+  parent
+) {
 
   const node = {
 
     id:
       element.getAttribute("ID") ||
-      ("node_" +
-       Math.random()
-         .toString(36)
-         .slice(2)),
+      (
+        "node_" +
+        Math.random()
+          .toString(36)
+          .slice(2)
+      ),
 
     text:
       element.getAttribute("TEXT") ||
@@ -732,48 +868,54 @@ function parseNode(element, parent) {
 
     children: [],
 
-    /*
-     * Respect Freeplane FOLDED attribute.
-     */
     expanded:
       element.getAttribute("FOLDED") !== "true",
 
     width: MIN_W,
 
     height: H
+
   };
 
 
   /*
-   * IMPORTANT:
+   * Only nested <node> elements
+   * are part of the hierarchy.
    *
-   * Only <node> elements are hierarchy children.
+   * Freeplane metadata such as:
    *
-   * Elements such as:
    * hook
    * attribute
    * richcontent
    * map_styles
    * stylenode
    *
-   * are ignored.
+   * is ignored.
    */
 
-  for (const child of element.children) {
+  for (
+    const child of element.children
+  ) {
 
     if (
-      child.tagName.toLowerCase() === "node"
+      child.tagName.toLowerCase() ===
+      "node"
     ) {
 
       node.children.push(
-        parseNode(child, node)
+        parseNode(
+          child,
+          node
+        )
       );
 
     }
 
   }
 
+
   return node;
+
 }
 
 
@@ -785,96 +927,110 @@ function collect(node) {
 
   all.push(node);
 
-  node.children.forEach(child => {
-    collect(child);
-  });
+  node.children.forEach(
+    child => collect(child)
+  );
+
 }
 
 
 /* ============================================================
-   VISIBLE NODES
+   GET VISIBLE NODES
    ============================================================ */
 
 function visible() {
 
   const result = [];
 
+
   function walk(node) {
 
     result.push(node);
 
+
     if (node.expanded) {
 
-      node.children.forEach(child => {
-        walk(child);
-      });
+      node.children.forEach(
+        child => walk(child)
+      );
 
     }
+
   }
+
 
   if (root) {
     walk(root);
   }
 
+
   return result;
+
 }
 
 
 /* ============================================================
-   MEASURE TEXT
+   MEASURE NODE TEXT
    ============================================================ */
 
 function measureTextWidth(text) {
 
-  const canvas =
-    document.createElement("canvas");
+  const measureCanvas =
+    document.createElement(
+      "canvas"
+    );
 
   const ctx =
-    canvas.getContext("2d");
+    measureCanvas.getContext(
+      "2d"
+    );
+
 
   /*
-   * Must match the CSS .label font:
-   * bold 14px
+   * Must match .label CSS.
+   *
+   * 700 = bold.
    */
   ctx.font =
     '700 14px Inter, system-ui, -apple-system, "Segoe UI", Arial, sans-serif';
 
+
   return Math.ceil(
     ctx.measureText(text).width
   );
+
 }
 
 
 /* ============================================================
-   CALCULATE NODE WIDTHS
+   CALCULATE NODE SIZES
    ============================================================ */
 
 function prepareNodeSizes() {
 
   columnWidths = [];
 
-  /*
-   * Calculate the width required for every node.
-   */
+
   all.forEach(node => {
 
     const textWidth =
-      measureTextWidth(node.text);
+      measureTextWidth(
+        node.text
+      );
+
 
     /*
-     * Horizontal padding:
+     * 28px:
+     * left + right padding
      *
-     * 14px left
-     * 14px right
-     *
-     * Plus additional space for
-     * the +/- button on parent nodes.
+     * 38px:
+     * expand/collapse button
      */
-
     const toggleSpace =
       node.children.length
         ? 38
         : 0;
+
 
     node.width =
       Math.max(
@@ -884,32 +1040,34 @@ function prepareNodeSizes() {
         toggleSpace
       );
 
+
     node.height = H;
 
   });
 
 
   /*
-   * Determine hierarchy depth.
+   * Find maximum node width
+   * at every hierarchy depth.
    */
   all.forEach(node => {
 
     let depth = 0;
 
-    let parent = node.parent;
+    let parent =
+      node.parent;
+
 
     while (parent) {
 
       depth++;
 
-      parent = parent.parent;
+      parent =
+        parent.parent;
 
     }
 
-    /*
-     * Use the largest node width
-     * in each hierarchy column.
-     */
+
     columnWidths[depth] =
       Math.max(
         columnWidths[depth] || MIN_W,
@@ -922,21 +1080,25 @@ function prepareNodeSizes() {
 
 
 /* ============================================================
-   LAYOUT
+   TREE LAYOUT
    ============================================================ */
 
 function layout() {
 
-  const positions = new Map();
+  const positions =
+    new Map();
 
   let y = 0;
 
+
   /*
-   * X position for each hierarchy depth.
+   * X coordinate for every
+   * hierarchy depth.
    */
   const xByDepth = [];
 
   let x = 0;
+
 
   for (
     let depth = 0;
@@ -953,7 +1115,10 @@ function layout() {
   }
 
 
-  function place(node, depth) {
+  function place(
+    node,
+    depth
+  ) {
 
     /*
      * Expanded parent.
@@ -964,35 +1129,41 @@ function layout() {
     ) {
 
       const childYs =
-        node.children.map(child => {
+        node.children.map(
+          child =>
+            place(
+              child,
+              depth + 1
+            )
+        );
 
-          return place(
-            child,
-            depth + 1
-          );
 
-        });
-
-
-      /*
-       * Center parent around children.
-       */
       const parentY =
         (
           childYs[0] +
-          childYs[childYs.length - 1]
+          childYs[
+            childYs.length - 1
+          ]
         ) / 2;
 
 
       positions.set(
         node.id,
         {
-          x: xByDepth[depth],
-          y: parentY,
-          width: columnWidths[depth],
-          height: H
+          x:
+            xByDepth[depth],
+
+          y:
+            parentY,
+
+          width:
+            columnWidths[depth],
+
+          height:
+            H
         }
       );
+
 
       return parentY;
 
@@ -1000,82 +1171,93 @@ function layout() {
 
 
     /*
-     * Leaf / collapsed node.
+     * Leaf or collapsed node.
      */
     const nodeY = y;
 
     y += H + VG;
 
+
     positions.set(
       node.id,
       {
-        x: xByDepth[depth],
-        y: nodeY,
-        width: columnWidths[depth],
-        height: H
+        x:
+          xByDepth[depth],
+
+        y:
+          nodeY,
+
+        width:
+          columnWidths[depth],
+
+        height:
+          H
       }
     );
+
 
     return nodeY;
 
   }
 
 
-  place(root, 0);
+  place(
+    root,
+    0
+  );
+
 
   return positions;
+
 }
 
 
 /* ============================================================
-   RENDER TREE
+   RENDER
    ============================================================ */
 
 function render() {
 
-  const svg =
-    document.getElementById("tree");
-
   svg.innerHTML = "";
 
 
-  /*
-   * Calculate widths before layout.
-   */
   prepareNodeSizes();
 
 
-  const visibleNodes =
+  const nodes =
     visible();
+
 
   const positions =
     layout();
 
 
-  /* ========================================================
+  /* ==========================================================
      DRAW CONNECTIONS
-     ======================================================== */
+     ========================================================== */
 
-  for (const node of visibleNodes) {
+  for (
+    const node of nodes
+  ) {
 
     if (!node.parent) {
       continue;
     }
 
-    const parentPosition =
+
+    const parent =
       positions.get(
         node.parent.id
       );
 
-    const nodePosition =
+
+    const child =
       positions.get(
         node.id
       );
 
-    if (
-      !parentPosition ||
-      !nodePosition
-    ) {
+
+    if (!parent || !child) {
       continue;
     }
 
@@ -1087,36 +1269,27 @@ function render() {
       );
 
 
-    /*
-     * Start at right edge of parent.
-     */
     const x1 =
-      parentPosition.x +
-      parentPosition.width;
+      parent.x +
+      parent.width;
 
 
-    /*
-     * End at left edge of child.
-     */
     const x2 =
-      nodePosition.x;
+      child.x;
 
 
-    /*
-     * Bezier midpoint.
-     */
     const middle =
       (x1 + x2) / 2;
 
 
     const y1 =
-      parentPosition.y +
-      parentPosition.height / 2;
+      parent.y +
+      parent.height / 2;
 
 
     const y2 =
-      nodePosition.y +
-      nodePosition.height / 2;
+      child.y +
+      child.height / 2;
 
 
     path.setAttribute(
@@ -1129,21 +1302,32 @@ function render() {
       `
     );
 
-    path.classList.add("edge");
 
-    svg.appendChild(path);
+    path.classList.add(
+      "edge"
+    );
+
+
+    svg.appendChild(
+      path
+    );
 
   }
 
 
-  /* ========================================================
+  /* ==========================================================
      DRAW NODES
-     ======================================================== */
+     ========================================================== */
 
-  for (const node of visibleNodes) {
+  for (
+    const node of nodes
+  ) {
 
     const position =
-      positions.get(node.id);
+      positions.get(
+        node.id
+      );
+
 
     if (!position) {
       continue;
@@ -1156,21 +1340,26 @@ function render() {
         "g"
       );
 
-    group.classList.add("node");
+
+    group.classList.add(
+      "node"
+    );
+
 
     group.dataset.id =
       node.id;
 
 
-    /* ======================================================
-       NODE BOX
-       ====================================================== */
+    /* ========================================================
+       BOX
+       ======================================================== */
 
     const rect =
       document.createElementNS(
         "http://www.w3.org/2000/svg",
         "rect"
       );
+
 
     rect.setAttribute(
       "x",
@@ -1197,63 +1386,75 @@ function render() {
       9
     );
 
-    rect.classList.add("box");
 
-    group.appendChild(rect);
+    rect.classList.add(
+      "box"
+    );
 
 
-    /* ======================================================
-       NODE LABEL
-       ====================================================== */
+    group.appendChild(
+      rect
+    );
 
-    const text =
+
+    /* ========================================================
+       LABEL
+       ======================================================== */
+
+    const label =
       document.createElementNS(
         "http://www.w3.org/2000/svg",
         "text"
       );
 
-    text.setAttribute(
+
+    label.setAttribute(
       "x",
       position.x + 14
     );
 
-    text.setAttribute(
+
+    label.setAttribute(
       "y",
       position.y +
       position.height / 2
     );
 
-    text.classList.add("label");
+
+    label.classList.add(
+      "label"
+    );
+
 
     /*
      * IMPORTANT:
      *
-     * Use the COMPLETE node name.
-     *
-     * No:
-     * substring()
-     * slice()
-     * ellipsis
-     * text-overflow
-     *
+     * Full node name.
+     * No truncation.
      */
-    text.textContent =
+    label.textContent =
       node.text;
 
-    group.appendChild(text);
+
+    group.appendChild(
+      label
+    );
 
 
-    /* ======================================================
-       EXPAND / COLLAPSE BUTTON
-       ====================================================== */
+    /* ========================================================
+       EXPAND / COLLAPSE
+       ======================================================== */
 
-    if (node.children.length) {
+    if (
+      node.children.length
+    ) {
 
       const circle =
         document.createElementNS(
           "http://www.w3.org/2000/svg",
           "circle"
         );
+
 
       circle.setAttribute(
         "cx",
@@ -1262,20 +1463,28 @@ function render() {
         16
       );
 
+
       circle.setAttribute(
         "cy",
         position.y +
         position.height / 2
       );
 
+
       circle.setAttribute(
         "r",
         9
       );
 
-      circle.classList.add("toggle");
 
-      group.appendChild(circle);
+      circle.classList.add(
+        "toggle"
+      );
+
+
+      group.appendChild(
+        circle
+      );
 
 
       const toggleText =
@@ -1284,6 +1493,7 @@ function render() {
           "text"
         );
 
+
       toggleText.setAttribute(
         "x",
         position.x +
@@ -1291,20 +1501,24 @@ function render() {
         16
       );
 
+
       toggleText.setAttribute(
         "y",
         position.y +
         position.height / 2
       );
 
+
       toggleText.classList.add(
         "toggleText"
       );
+
 
       toggleText.textContent =
         node.expanded
           ? "−"
           : "+";
+
 
       group.appendChild(
         toggleText
@@ -1313,9 +1527,9 @@ function render() {
     }
 
 
-    /* ======================================================
-       CLICK
-       ====================================================== */
+    /* ========================================================
+       SINGLE CLICK
+       ======================================================== */
 
     group.addEventListener(
       "click",
@@ -1323,17 +1537,23 @@ function render() {
 
         event.stopPropagation();
 
-        if (node.children.length) {
+
+        if (
+          node.children.length
+        ) {
 
           node.expanded =
             !node.expanded;
+
 
           render();
 
         }
         else {
 
-          select(node);
+          selectNode(
+            node
+          );
 
         }
 
@@ -1341,9 +1561,9 @@ function render() {
     );
 
 
-    /* ======================================================
+    /* ========================================================
        DOUBLE CLICK
-       ====================================================== */
+       ======================================================== */
 
     group.addEventListener(
       "dblclick",
@@ -1351,37 +1571,35 @@ function render() {
 
         event.stopPropagation();
 
-        center(node);
+        centerNode(
+          node
+        );
 
       }
     );
 
 
-    svg.appendChild(group);
+    svg.appendChild(
+      group
+    );
 
   }
 
 
-  /* ========================================================
+  /* ==========================================================
      SVG SIZE
-     ======================================================== */
+     ========================================================== */
 
-  const positionsArray =
+  const values =
     [...positions.values()];
 
-
-  /*
-   * IMPORTANT:
-   *
-   * Use the actual dynamic width,
-   * not a fixed W value.
-   */
 
   const maxX =
     Math.max(
       100,
-      ...positionsArray.map(
-        p => p.x + p.width
+      ...values.map(
+        p =>
+          p.x + p.width
       )
     ) + 80;
 
@@ -1389,8 +1607,9 @@ function render() {
   const maxY =
     Math.max(
       100,
-      ...positionsArray.map(
-        p => p.y + p.height
+      ...values.map(
+        p =>
+          p.y + p.height
       )
     ) + 80;
 
@@ -1400,10 +1619,12 @@ function render() {
     maxX
   );
 
+
   svg.setAttribute(
     "height",
     maxY
   );
+
 
   svg.setAttribute(
     "viewBox",
@@ -1411,10 +1632,12 @@ function render() {
   );
 
 
-  document.getElementById(
-    "status"
-  ).textContent =
-    `${all.length} nodes`;
+  if (status) {
+
+    status.textContent =
+      `${all.length} nodes`;
+
+  }
 
 
   apply();
@@ -1426,7 +1649,7 @@ function render() {
    SELECT NODE
    ============================================================ */
 
-function select(node) {
+function selectNode(node) {
 
   document
     .querySelectorAll(".node")
@@ -1454,10 +1677,12 @@ function select(node) {
   }
 
 
-  document.getElementById(
-    "status"
-  ).textContent =
-    node.text;
+  if (status) {
+
+    status.textContent =
+      node.text;
+
+  }
 
 }
 
@@ -1468,13 +1693,15 @@ function select(node) {
 
 function expandAll() {
 
-  all.forEach(node => {
+  all.forEach(
+    node => {
+      node.expanded = true;
+    }
+  );
 
-    node.expanded = true;
-
-  });
 
   render();
+
 
   setTimeout(
     fit,
@@ -1490,19 +1717,23 @@ function expandAll() {
 
 function collapseAll() {
 
-  all.forEach(node => {
-
-    node.expanded = false;
-
-  });
+  all.forEach(
+    node => {
+      node.expanded = false;
+    }
+  );
 
 
   /*
    * Keep root visible.
    */
-  root.expanded = true;
+  if (root) {
+    root.expanded = true;
+  }
+
 
   render();
+
 
   setTimeout(
     fit,
@@ -1516,119 +1747,159 @@ function collapseAll() {
    SEARCH
    ============================================================ */
 
-const searchInput =
-  document.getElementById(
-    "search"
+if (searchInput) {
+
+  searchInput.addEventListener(
+    "input",
+    handleSearch
   );
 
-const searchResults =
-  document.getElementById(
-    "searchResults"
-  );
+}
 
 
-searchInput.addEventListener(
-  "input",
-  () => {
+/* ============================================================
+   HANDLE SEARCH
+   ============================================================ */
 
-    const query =
-      searchInput.value
-        .trim()
-        .toLowerCase();
+function handleSearch() {
+
+  const query =
+    searchInput.value
+      .trim()
+      .toLowerCase();
 
 
-    searchResults.innerHTML = "";
+  /*
+   * Clear results.
+   */
+  searchResults.innerHTML = "";
+
+
+  /*
+   * Remove previous highlights.
+   */
+  document
+    .querySelectorAll(".node")
+    .forEach(element => {
+
+      element.classList.remove(
+        "match"
+      );
+
+    });
+
+
+  if (!query) {
 
     searchResults.style.display =
       "none";
 
+    return;
 
-    if (!query) {
-
-      document
-        .querySelectorAll(".node")
-        .forEach(element => {
-
-          element.classList.remove(
-            "match"
-          );
-
-        });
-
-      return;
-
-    }
+  }
 
 
-    /*
-     * Find matching UVM nodes.
-     */
-    const matches =
-      all.filter(node =>
+  const matches =
+    all.filter(
+      node =>
         node.text
           .toLowerCase()
           .includes(query)
+    );
+
+
+  /* ==========================================================
+     NO RESULTS
+     ========================================================== */
+
+  if (!matches.length) {
+
+    const empty =
+      document.createElement(
+        "div"
       );
 
 
-    /*
-     * No matches.
-     */
-    if (!matches.length) {
-
-      const empty =
-        document.createElement("div");
-
-      empty.className =
-        "searchResult";
-
-      empty.textContent =
-        "No matching node";
-
-      empty.style.color =
-        "#999999";
-
-      searchResults.appendChild(
-        empty
-      );
-
-      searchResults.style.display =
-        "block";
-
-      return;
-
-    }
+    empty.className =
+      "searchResult";
 
 
-    /*
-     * Create search results.
-     */
-    matches.forEach(node => {
+    empty.textContent =
+      "No matching node";
+
+
+    empty.style.color =
+      "#999999";
+
+
+    searchResults.appendChild(
+      empty
+    );
+
+
+    searchResults.style.display =
+      "block";
+
+
+    return;
+
+  }
+
+
+  /* ==========================================================
+     SEARCH RESULTS
+     ========================================================== */
+
+  matches.forEach(
+    node => {
 
       const result =
-        document.createElement("div");
+        document.createElement(
+          "div"
+        );
+
 
       result.className =
         "searchResult";
+
 
       result.textContent =
         node.text;
 
 
       /*
-       * CLICK SEARCH RESULT
-       *
-       * Expand parents,
-       * render tree,
-       * center selected node.
+       * Tap/click search result.
        */
       result.addEventListener(
         "click",
         event => {
 
+          event.preventDefault();
+
           event.stopPropagation();
 
-          goToNode(node);
+          goToNode(
+            node
+          );
+
+        }
+      );
+
+
+      /*
+       * Mobile touch.
+       */
+      result.addEventListener(
+        "pointerup",
+        event => {
+
+          event.preventDefault();
+
+          event.stopPropagation();
+
+          goToNode(
+            node
+          );
 
         }
       );
@@ -1638,14 +1909,14 @@ searchInput.addEventListener(
         result
       );
 
-    });
+    }
+  );
 
 
-    searchResults.style.display =
-      "block";
+  searchResults.style.display =
+    "block";
 
-  }
-);
+}
 
 
 /* ============================================================
@@ -1655,16 +1926,16 @@ searchInput.addEventListener(
 function goToNode(node) {
 
   /*
-   * Expand every parent so that
-   * the searched node becomes visible.
+   * Expand all ancestors.
    */
-
   let parent =
     node.parent;
 
+
   while (parent) {
 
-    parent.expanded = true;
+    parent.expanded =
+      true;
 
     parent =
       parent.parent;
@@ -1673,13 +1944,13 @@ function goToNode(node) {
 
 
   /*
-   * Render the newly expanded hierarchy.
+   * Re-render so the node becomes visible.
    */
   render();
 
 
   /*
-   * Wait for SVG layout to update.
+   * Give SVG time to update.
    */
   setTimeout(
     () => {
@@ -1687,7 +1958,9 @@ function goToNode(node) {
       /*
        * Center the selected node.
        */
-      center(node);
+      centerNode(
+        node
+      );
 
 
       /*
@@ -1709,14 +1982,15 @@ function goToNode(node) {
 
 
       /*
-       * Close search results.
+       * Close results.
        */
       searchResults.style.display =
         "none";
 
 
       /*
-       * Keep the search keyword.
+       * Keep selected node name
+       * in search box.
        */
       searchInput.value =
         node.text;
@@ -1729,24 +2003,31 @@ function goToNode(node) {
 
 
 /* ============================================================
-   VIEW TRANSFORM
+   APPLY TRANSFORM
    ============================================================ */
 
 function apply() {
 
-  document.getElementById(
-    "canvas"
-  ).style.transform =
+  canvas.style.transform =
     `translate(${ox}px, ${oy}px) scale(${zoom})`;
 
 }
 
 
 /* ============================================================
-   ZOOM
+   NORMAL ZOOM
    ============================================================ */
 
-function zoomAtCenter(factor) {
+function zoomAtCenter(
+  factor
+) {
+
+  const viewportWidth =
+    viewport.clientWidth;
+
+  const viewportHeight =
+    viewport.clientHeight;
+
 
   zoom =
     Math.max(
@@ -1757,13 +2038,157 @@ function zoomAtCenter(factor) {
       )
     );
 
+
+  /*
+   * Keep zoom centered around
+   * screen center.
+   */
+  const centerX =
+    viewportWidth / 2;
+
+  const centerY =
+    viewportHeight / 2;
+
+
   apply();
 
 }
 
 
 /* ============================================================
-   RESET
+   ZOOM AROUND TOUCH POINT
+   ============================================================ */
+
+function zoomAroundPoint(
+  factor,
+  screenX,
+  screenY
+) {
+
+  const oldZoom =
+    zoom;
+
+
+  zoom =
+    Math.max(
+      MIN,
+      Math.min(
+        MAX,
+        zoom * factor
+      )
+    );
+
+
+  const zoomChange =
+    zoom / oldZoom;
+
+
+  /*
+   * Keep the content beneath
+   * the fingers stationary.
+   */
+  ox =
+    screenX -
+    (
+      screenX - ox
+    ) *
+    zoomChange;
+
+
+  oy =
+    screenY -
+    (
+      screenY - oy
+    ) *
+    zoomChange;
+
+
+  apply();
+
+}
+
+
+/* ============================================================
+   FIT TO SCREEN
+   ============================================================ */
+
+function fit() {
+
+  const width =
+    parseFloat(
+      svg.getAttribute(
+        "width"
+      )
+    ) || 1;
+
+
+  const height =
+    parseFloat(
+      svg.getAttribute(
+        "height"
+      )
+    ) || 1;
+
+
+  const viewportWidth =
+    viewport.clientWidth;
+
+
+  const viewportHeight =
+    viewport.clientHeight;
+
+
+  /*
+   * Leave some margin.
+   */
+  const horizontalMargin =
+    40;
+
+  const verticalMargin =
+    40;
+
+
+  zoom =
+    Math.max(
+      MIN,
+      Math.min(
+        1,
+        Math.min(
+          (
+            viewportWidth -
+            horizontalMargin
+          ) / width,
+
+          (
+            viewportHeight -
+            verticalMargin
+          ) / height
+        )
+      )
+    );
+
+
+  ox =
+    (
+      viewportWidth -
+      width * zoom
+    ) / 2;
+
+
+  oy =
+    (
+      viewportHeight -
+      height * zoom
+    ) / 2;
+
+
+  apply();
+
+}
+
+
+/* ============================================================
+   RESET VIEW
    ============================================================ */
 
 function resetView() {
@@ -1780,70 +2205,10 @@ function resetView() {
 
 
 /* ============================================================
-   FIT TO SCREEN
-   ============================================================ */
-
-function fit() {
-
-  const svg =
-    document.getElementById("tree");
-
-  const viewport =
-    document.getElementById("viewport");
-
-
-  const viewportWidth =
-    viewport.clientWidth;
-
-  const viewportHeight =
-    viewport.clientHeight;
-
-
-  const width =
-    parseFloat(
-      svg.getAttribute("width")
-    ) || 1;
-
-
-  const height =
-    parseFloat(
-      svg.getAttribute("height")
-    ) || 1;
-
-
-  zoom =
-    Math.max(
-      MIN,
-      Math.min(
-        1,
-        Math.min(
-          (viewportWidth - 80) / width,
-          (viewportHeight - 80) / height
-        )
-      )
-    );
-
-
-  ox =
-    (viewportWidth -
-     width * zoom) / 2;
-
-
-  oy =
-    (viewportHeight -
-     height * zoom) / 2;
-
-
-  apply();
-
-}
-
-
-/* ============================================================
    CENTER NODE
    ============================================================ */
 
-function center(node) {
+function centerNode(node) {
 
   const element =
     document.querySelector(
@@ -1856,35 +2221,55 @@ function center(node) {
   }
 
 
-  const rect =
-    element.getBoundingClientRect();
+  /*
+   * Use SVG bounding box rather than
+   * browser-scaled bounding rectangle.
+   */
+  const position =
+    element.getBBox();
 
 
-  const viewport =
-    document.getElementById(
-      "viewport"
-    );
+  const viewportWidth =
+    viewport.clientWidth;
 
 
-  const viewportRect =
-    viewport.getBoundingClientRect();
+  const viewportHeight =
+    viewport.clientHeight;
 
 
-  ox +=
-    viewportRect.left +
-    viewportRect.width / 2 -
-    (rect.left + rect.width / 2);
+  /*
+   * Current canvas coordinates
+   * of node center.
+   */
+  const nodeX =
+    position.x +
+    position.width / 2;
 
 
-  oy +=
-    viewportRect.top +
-    viewportRect.height / 2 -
-    (rect.top + rect.height / 2);
+  const nodeY =
+    position.y +
+    position.height / 2;
+
+
+  /*
+   * Center node in viewport.
+   */
+  ox =
+    viewportWidth / 2 -
+    nodeX * zoom;
+
+
+  oy =
+    viewportHeight / 2 -
+    nodeY * zoom;
 
 
   apply();
 
-  select(node);
+
+  selectNode(
+    node
+  );
 
 }
 
@@ -1893,22 +2278,43 @@ function center(node) {
    MOUSE WHEEL ZOOM
    ============================================================ */
 
-const viewport =
-  document.getElementById(
-    "viewport"
-  );
-
-
 viewport.addEventListener(
   "wheel",
   event => {
 
+    /*
+     * Prevent page scrolling.
+     */
     event.preventDefault();
 
-    zoomAtCenter(
+
+    /*
+     * Zoom around mouse position.
+     */
+    const rect =
+      viewport.getBoundingClientRect();
+
+
+    const x =
+      event.clientX -
+      rect.left;
+
+
+    const y =
+      event.clientY -
+      rect.top;
+
+
+    const factor =
       event.deltaY < 0
         ? 1.15
-        : 1 / 1.15
+        : 1 / 1.15;
+
+
+    zoomAroundPoint(
+      factor,
+      x,
+      y
     );
 
   },
@@ -1919,29 +2325,38 @@ viewport.addEventListener(
 
 
 /* ============================================================
-   PAN + TOUCH SUPPORT
+   POINTER DOWN
    ============================================================ */
 
-let activePointers = new Map();
-
-let lastTouchDistance = null;
-
-
-/*
- * Pointer down
- */
 viewport.addEventListener(
   "pointerdown",
   event => {
 
     /*
-     * Don't start dragging when clicking a node.
+     * Search UI must remain independent
+     * from viewport gestures.
      */
     if (
-      event.target.closest(".node")
+      event.target.closest(
+        "#searchWrapper"
+      )
     ) {
       return;
     }
+
+
+    /*
+     * Node click should be handled
+     * by the node itself.
+     */
+    if (
+      event.target.closest(
+        ".node"
+      )
+    ) {
+      return;
+    }
+
 
     activePointers.set(
       event.pointerId,
@@ -1951,11 +2366,62 @@ viewport.addEventListener(
       }
     );
 
+
     viewport.setPointerCapture(
       event.pointerId
     );
 
+
+    /* ========================================================
+       TWO FINGERS
+       ======================================================== */
+
+    if (
+      activePointers.size === 2
+    ) {
+
+      lastPinchDistance =
+        getPinchDistance();
+
+
+      lastPinchCenter =
+        getPinchCenter();
+
+
+      lastPointerPosition =
+        null;
+
+
+      dragging = false;
+
+
+      viewport.classList.remove(
+        "dragging"
+      );
+
+
+      return;
+
+    }
+
+
+    /* ========================================================
+       ONE FINGER
+       ======================================================== */
+
+    lastPointerPosition = {
+
+      x:
+        event.clientX,
+
+      y:
+        event.clientY
+
+    };
+
+
     dragging = true;
+
 
     viewport.classList.add(
       "dragging"
@@ -1965,9 +2431,10 @@ viewport.addEventListener(
 );
 
 
-/*
- * Pointer move
- */
+/* ============================================================
+   POINTER MOVE
+   ============================================================ */
+
 viewport.addEventListener(
   "pointermove",
   event => {
@@ -1980,39 +2447,9 @@ viewport.addEventListener(
       return;
     }
 
-    const previous =
-      activePointers.get(
-        event.pointerId
-      );
-
-
-    const dx =
-      event.clientX -
-      previous.x;
-
-    const dy =
-      event.clientY -
-      previous.y;
-
 
     /*
-     * One finger / mouse:
-     * Pan the hierarchy.
-     */
-    if (
-      activePointers.size === 1
-    ) {
-
-      ox += dx;
-      oy += dy;
-
-      apply();
-
-    }
-
-
-    /*
-     * Update pointer position.
+     * Update pointer.
      */
     activePointers.set(
       event.pointerId,
@@ -2022,13 +2459,141 @@ viewport.addEventListener(
       }
     );
 
+
+    /* ========================================================
+       TWO-FINGER PINCH
+       ======================================================== */
+
+    if (
+      activePointers.size === 2
+    ) {
+
+      const distance =
+        getPinchDistance();
+
+
+      const center =
+        getPinchCenter();
+
+
+      if (
+        lastPinchDistance &&
+        distance &&
+        center
+      ) {
+
+        const scale =
+          distance /
+          lastPinchDistance;
+
+
+        /*
+         * Limit extremely large
+         * pointer jumps.
+         */
+        const safeScale =
+          Math.max(
+            0.85,
+            Math.min(
+              1.15,
+              scale
+            )
+          );
+
+
+        zoomAroundPoint(
+          safeScale,
+          center.x,
+          center.y
+        );
+
+
+        /*
+         * Also pan with the midpoint
+         * of the two fingers.
+         */
+        if (
+          lastPinchCenter
+        ) {
+
+          ox +=
+            center.x -
+            lastPinchCenter.x;
+
+
+          oy +=
+            center.y -
+            lastPinchCenter.y;
+
+
+          apply();
+
+        }
+
+      }
+
+
+      lastPinchDistance =
+        distance;
+
+
+      lastPinchCenter =
+        center;
+
+
+      return;
+
+    }
+
+
+    /* ========================================================
+       ONE-FINGER PAN
+       ======================================================== */
+
+    if (
+      activePointers.size === 1 &&
+      dragging &&
+      lastPointerPosition
+    ) {
+
+      const dx =
+        event.clientX -
+        lastPointerPosition.x;
+
+
+      const dy =
+        event.clientY -
+        lastPointerPosition.y;
+
+
+      ox += dx;
+
+      oy += dy;
+
+
+      lastPointerPosition = {
+
+        x:
+          event.clientX,
+
+        y:
+          event.clientY
+
+      };
+
+
+      apply();
+
+    }
+
   }
 );
 
 
-/*
- * Pointer up
- */
+/* ============================================================
+   POINTER UP
+   ============================================================ */
+
 viewport.addEventListener(
   "pointerup",
   event => {
@@ -2037,11 +2602,32 @@ viewport.addEventListener(
       event.pointerId
     );
 
+
+    /*
+     * Reset gesture state.
+     */
+    if (
+      activePointers.size < 2
+    ) {
+
+      lastPinchDistance =
+        null;
+
+      lastPinchCenter =
+        null;
+
+    }
+
+
     if (
       activePointers.size === 0
     ) {
 
       dragging = false;
+
+      lastPointerPosition =
+        null;
+
 
       viewport.classList.remove(
         "dragging"
@@ -2053,9 +2639,10 @@ viewport.addEventListener(
 );
 
 
-/*
- * Pointer cancel
- */
+/* ============================================================
+   POINTER CANCEL
+   ============================================================ */
+
 viewport.addEventListener(
   "pointercancel",
   event => {
@@ -2064,12 +2651,158 @@ viewport.addEventListener(
       event.pointerId
     );
 
+
+    if (
+      activePointers.size < 2
+    ) {
+
+      lastPinchDistance =
+        null;
+
+      lastPinchCenter =
+        null;
+
+    }
+
+
+    if (
+      activePointers.size === 0
+    ) {
+
+      dragging = false;
+
+      lastPointerPosition =
+        null;
+
+
+      viewport.classList.remove(
+        "dragging"
+      );
+
+    }
+
   }
 );
 
 
 /* ============================================================
-   START
+   PINCH DISTANCE
+   ============================================================ */
+
+function getPinchDistance() {
+
+  const points =
+    [...activePointers.values()];
+
+
+  if (
+    points.length < 2
+  ) {
+    return null;
+  }
+
+
+  const dx =
+    points[0].x -
+    points[1].x;
+
+
+  const dy =
+    points[0].y -
+    points[1].y;
+
+
+  return Math.sqrt(
+    dx * dx +
+    dy * dy
+  );
+
+}
+
+
+/* ============================================================
+   PINCH CENTER
+   ============================================================ */
+
+function getPinchCenter() {
+
+  const points =
+    [...activePointers.values()];
+
+
+  if (
+    points.length < 2
+  ) {
+    return null;
+  }
+
+
+  return {
+
+    x:
+      (
+        points[0].x +
+        points[1].x
+      ) / 2,
+
+    y:
+      (
+        points[0].y +
+        points[1].y
+      ) / 2
+
+  };
+
+}
+
+
+/* ============================================================
+   CLOSE SEARCH WHEN CLICKING OUTSIDE
+   ============================================================ */
+
+document.addEventListener(
+  "pointerdown",
+  event => {
+
+    if (
+      !event.target.closest(
+        "#searchWrapper"
+      )
+    ) {
+
+      if (searchResults) {
+
+        searchResults.style.display =
+          "none";
+
+      }
+
+    }
+
+  }
+);
+
+
+/* ============================================================
+   WINDOW RESIZE
+   ============================================================ */
+
+window.addEventListener(
+  "resize",
+  () => {
+
+    /*
+     * Re-render because mobile
+     * dimensions may have changed.
+     */
+    render();
+
+  }
+);
+
+
+/* ============================================================
+   START APPLICATION
    ============================================================ */
 
 load();
