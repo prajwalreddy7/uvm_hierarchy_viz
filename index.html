@@ -89,6 +89,84 @@ button:hover {
   font-size: 13px;
 }
 
+/* ============================================================
+   SEARCH
+   ============================================================ */
+
+#searchWrapper {
+  position: relative;
+}
+
+#searchResults {
+
+  display: none;
+
+  position: absolute;
+
+  top: 44px;
+
+  left: 0;
+
+  width: 320px;
+
+  max-height: 300px;
+
+  overflow-y: auto;
+
+  background: #111111;
+
+  border: 1px solid #444444;
+
+  border-radius: 8px;
+
+  box-shadow:
+    0 10px 30px rgba(0,0,0,.7);
+
+  z-index: 1000;
+}
+
+
+.searchResult {
+
+  padding: 10px 12px;
+
+  color: #ffffff;
+
+  font-size: 13px;
+
+  font-weight: 600;
+
+  cursor: pointer;
+
+  border-bottom:
+    1px solid #2a2a2a;
+
+  white-space: nowrap;
+
+  overflow: hidden;
+
+  text-overflow: ellipsis;
+}
+
+
+.searchResult:hover {
+
+  background: #292929;
+
+}
+
+
+@media(max-width:480px) {
+
+  #searchResults {
+
+    width: 250px;
+
+    max-height: 240px;
+
+  }
+
+}
 
 /* ============================================================
    VIEWPORT
@@ -410,11 +488,17 @@ svg {
     Reset
   </button>
 
+  <div id="searchWrapper">
+
   <input
     id="search"
-    placeholder="Search component…"
+    placeholder="Search UVM component…"
     autocomplete="off"
   >
+
+  <div id="searchResults"></div>
+
+</div>
 
   <button
     class="desktop"
@@ -1432,23 +1516,35 @@ function collapseAll() {
    SEARCH
    ============================================================ */
 
-document
-  .getElementById("search")
-  .addEventListener(
-    "input",
-    () => {
+const searchInput =
+  document.getElementById(
+    "search"
+  );
 
-      const query =
-        document
-          .getElementById("search")
-          .value
-          .trim()
-          .toLowerCase();
+const searchResults =
+  document.getElementById(
+    "searchResults"
+  );
 
 
-      /*
-       * Clear old matches.
-       */
+searchInput.addEventListener(
+  "input",
+  () => {
+
+    const query =
+      searchInput.value
+        .trim()
+        .toLowerCase();
+
+
+    searchResults.innerHTML = "";
+
+    searchResults.style.display =
+      "none";
+
+
+    if (!query) {
+
       document
         .querySelectorAll(".node")
         .forEach(element => {
@@ -1459,85 +1555,177 @@ document
 
         });
 
+      return;
 
-      if (!query) {
+    }
 
-        document.getElementById(
-          "status"
-        ).textContent =
-          `${all.length} nodes`;
 
-        return;
+    /*
+     * Find matching UVM nodes.
+     */
+    const matches =
+      all.filter(node =>
+        node.text
+          .toLowerCase()
+          .includes(query)
+      );
+
+
+    /*
+     * No matches.
+     */
+    if (!matches.length) {
+
+      const empty =
+        document.createElement("div");
+
+      empty.className =
+        "searchResult";
+
+      empty.textContent =
+        "No matching node";
+
+      empty.style.color =
+        "#999999";
+
+      searchResults.appendChild(
+        empty
+      );
+
+      searchResults.style.display =
+        "block";
+
+      return;
+
+    }
+
+
+    /*
+     * Create search results.
+     */
+    matches.forEach(node => {
+
+      const result =
+        document.createElement("div");
+
+      result.className =
+        "searchResult";
+
+      result.textContent =
+        node.text;
+
+
+      /*
+       * CLICK SEARCH RESULT
+       *
+       * Expand parents,
+       * render tree,
+       * center selected node.
+       */
+      result.addEventListener(
+        "click",
+        event => {
+
+          event.stopPropagation();
+
+          goToNode(node);
+
+        }
+      );
+
+
+      searchResults.appendChild(
+        result
+      );
+
+    });
+
+
+    searchResults.style.display =
+      "block";
+
+  }
+);
+
+
+/* ============================================================
+   GO TO SEARCHED NODE
+   ============================================================ */
+
+function goToNode(node) {
+
+  /*
+   * Expand every parent so that
+   * the searched node becomes visible.
+   */
+
+  let parent =
+    node.parent;
+
+  while (parent) {
+
+    parent.expanded = true;
+
+    parent =
+      parent.parent;
+
+  }
+
+
+  /*
+   * Render the newly expanded hierarchy.
+   */
+  render();
+
+
+  /*
+   * Wait for SVG layout to update.
+   */
+  setTimeout(
+    () => {
+
+      /*
+       * Center the selected node.
+       */
+      center(node);
+
+
+      /*
+       * Highlight it.
+       */
+      const element =
+        document.querySelector(
+          `[data-id="${CSS.escape(node.id)}"]`
+        );
+
+
+      if (element) {
+
+        element.classList.add(
+          "selected"
+        );
 
       }
 
 
       /*
-       * Find matching nodes.
+       * Close search results.
        */
-      const matches =
-        all.filter(node =>
-          node.text
-            .toLowerCase()
-            .includes(query)
-        );
+      searchResults.style.display =
+        "none";
 
 
       /*
-       * Expand parents of matches.
+       * Keep the search keyword.
        */
-      matches.forEach(node => {
+      searchInput.value =
+        node.text;
 
-        let parent =
-          node.parent;
-
-        while (parent) {
-
-          parent.expanded = true;
-
-          parent =
-            parent.parent;
-
-        }
-
-      });
-
-
-      render();
-
-
-      /*
-       * Highlight matches.
-       */
-      matches.forEach(node => {
-
-        const element =
-          document.querySelector(
-            `[data-id="${CSS.escape(node.id)}"]`
-          );
-
-        if (element) {
-
-          element.classList.add(
-            "match"
-          );
-
-        }
-
-      });
-
-
-      document.getElementById(
-        "status"
-      ).textContent =
-        `${matches.length} match${
-          matches.length === 1
-            ? ""
-            : "es"
-        }`;
-
-    }
+    },
+    50
   );
+
+}
 
 
 /* ============================================================
